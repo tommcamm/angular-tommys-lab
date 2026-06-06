@@ -11,45 +11,45 @@
     {
       "id": 8,
       "subject": "Task 2: ui.css design layer (Tailwind+spartan, plain-CSS fallback)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [7],
       "description": "**Goal:** Stable .ui-* stylesheet every component references, so downstream tasks don't depend on the alpha UI lib working.\n\n**Files:** libs/tommy/multi-step-form/src/lib/ui.css; apps/tommy/host/src/styles.css; .postcssrc.json; package.json.\n\n**Acceptance Criteria:** ui.css defines .ui-card/.ui-input/.ui-label/.ui-error/.ui-muted/.ui-btn/.ui-btn-primary/.ui-step/.ui-step-active/.ui-step-done; Tailwind v4 + spartan tokens compile OR plain-CSS fallback with same class names; host build succeeds + styled element renders; README records decision.\n\n**Verify:** pnpm nx build tommy-host exits 0; serve shows styled Start button.\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/ui.css\",\"apps/tommy/host/src/styles.css\",\".postcssrc.json\",\"package.json\"], \"verifyCommand\": \"pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"all .ui-* classes defined\",\"tailwind+spartan compiles OR plain-css fallback same names\",\"host build + styled render\",\"README records styling decision\"]}\n```"
     },
     {
       "id": 9,
       "subject": "Task 3: Backend contract types + simulated FlowService",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [7],
       "description": "**Goal:** Typed backend contract + injectable service simulating async load/submit (deterministic, fake-timer friendly).\n\n**Files:** flow-options.ts; flow.service.ts; flow.service.spec.ts.\n\n**Acceptance Criteria:** loadOptions() returns constraints + >=1 required & >=1 optional TOS; submitFlow() rejects 'taken' (case-insensitive) with username field error else {ok,confirmationId} containing username; no Math.random/Date.now (setTimeout delay).\n\n**Verify:** pnpm nx test tommy-multi-step-form -- flow.service (3 tests).\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/flow-options.ts\",\"libs/tommy/multi-step-form/src/lib/flow.service.ts\",\"libs/tommy/multi-step-form/src/lib/flow.service.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form -- flow.service\", \"acceptanceCriteria\": [\"loadOptions constraints + required/optional TOS\",\"submitFlow rejects 'taken'\",\"submitFlow success confirmationId\",\"deterministic fake-timer friendly\"]}\n```"
     },
     {
       "id": 10,
       "subject": "Task 4: Model + reusable composed schemas + createFlowForm",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [7, 9],
       "description": "**Goal:** Model, three reusable sub-schemas composed into flowSchema(opts) via apply/applyEach, and factory building the root form post-load.\n\n**Files:** flow-model.ts; flow-schema.ts; create-flow-form.ts; flow-schema.spec.ts; create-flow-form.spec.ts.\n\n**Acceptance Criteria:** accountSchema(opts) enforces username min/max + password min from opts; confirmPassword passwordMismatch unless equals password; required TOS mustAccept; flowSchema composes all; root valid only when all groups valid; form().value()=FlowModel; emptyFlowModel seeds tos; createFlowForm via runInInjectionContext.\n\n**Verify:** pnpm nx test tommy-multi-step-form (schema + factory specs).\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/flow-model.ts\",\"libs/tommy/multi-step-form/src/lib/flow-schema.ts\",\"libs/tommy/multi-step-form/src/lib/create-flow-form.ts\",\"libs/tommy/multi-step-form/src/lib/flow-schema.spec.ts\",\"libs/tommy/multi-step-form/src/lib/create-flow-form.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form\", \"acceptanceCriteria\": [\"username/password constraints from opts\",\"confirmPassword cross-field\",\"required TOS must accept\",\"flowSchema composition + value\",\"emptyFlowModel seeds tos\",\"createFlowForm runInInjectionContext\"]}\n```"
     },
     {
       "id": 11,
       "subject": "Task 5: Presentational step components + step indicator",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [8, 10],
       "description": "**Goal:** Dumb OnPush components rendering a FieldTree slice via [formField]; no nav logic.\n\n**Files:** steps/profile-step.ts; steps/account-step.ts; steps/tos-step.ts; step-indicator.ts; steps/steps.spec.ts.\n\n**Acceptance Criteria:** each step field=input.required<FieldTree<..>>() + showErrors=input(false); profile/account bind text inputs + reveal errors; TosStep items input, iterates TOS FieldTree, binds checkbox [formField]=ack.accepted, shows title/body + required marker; smoke test renders incl 2 checkboxes.\n\n**Verify:** pnpm nx test tommy-multi-step-form -- steps.\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/steps/profile-step.ts\",\"libs/tommy/multi-step-form/src/lib/steps/account-step.ts\",\"libs/tommy/multi-step-form/src/lib/steps/tos-step.ts\",\"libs/tommy/multi-step-form/src/lib/step-indicator.ts\",\"libs/tommy/multi-step-form/src/lib/steps/steps.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form -- steps\", \"acceptanceCriteria\": [\"field+showErrors inputs\",\"profile/account formField + error reveal\",\"tos iterates field tree + checkbox + text\",\"smoke render incl 2 checkboxes\"]}\n```"
     },
     {
       "id": 12,
       "subject": "Task 6: MultiStepFlow container (phases, gated nav, submit)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [9, 10, 11],
       "description": "**Goal:** Entry component as phase/step state machine: start->load->build form->gated steps->submit() (server errors mapped to username)->done.\n\n**Files:** multi-step-flow.ts/.html/.css; multi-step-flow.spec.ts.\n\n**Acceptance Criteria:** start() loading->loadOptions->createFlowForm->form phase (error on failure); Next gated by current step validity; Back preserves data; last step Submit via submit() success->done w/confirmationId; 'taken'->server error on account step; reset() clears; FlowService provided; smoke intro->profile after Start.\n\n**Verify:** pnpm nx test tommy-multi-step-form -- multi-step-flow; manual serve walkthrough.\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/multi-step-flow.ts\",\"libs/tommy/multi-step-form/src/lib/multi-step-flow.html\",\"libs/tommy/multi-step-form/src/lib/multi-step-flow.css\",\"libs/tommy/multi-step-form/src/lib/multi-step-flow.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form -- multi-step-flow\", \"acceptanceCriteria\": [\"start loads + builds form\",\"Next gated; Back preserves data\",\"submit success->done; taken->server error\",\"reset clears\",\"smoke intro->profile\"]}\n```"
     },
     {
       "id": 13,
       "subject": "Task 7: Verification & lib docs",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [8, 12],
       "description": "**Goal:** Confirm whole experiment builds/lints/tests green and document the lib.\n\n**Files:** libs/tommy/multi-step-form/README.md.\n\n**Acceptance Criteria:** run-many lint/test/typecheck for lib+host passes; nx build tommy-host succeeds with lazy multi-step-form chunk; README documents features, file map, test command, styling decision.\n\n**Verify:** pnpm nx run-many -t lint test typecheck -p tommy-multi-step-form tommy-host && pnpm nx build tommy-host.\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/README.md\"], \"verifyCommand\": \"pnpm nx run-many -t lint test typecheck -p tommy-multi-step-form tommy-host && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"run-many green\",\"host build lazy chunk\",\"README documents experiment + styling\"]}\n```"
     }
   ],
-  "lastUpdated": "2026-06-06"
+  "lastUpdated": "2026-06-06T10:13:00Z"
 }
