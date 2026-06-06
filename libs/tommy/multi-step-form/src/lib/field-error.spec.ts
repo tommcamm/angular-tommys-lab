@@ -43,9 +43,10 @@ describe('FieldError', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.show.set(true);
     fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('span.ui-error')).not.toBeNull();
     fixture.componentInstance.form.name().value.set('Tommy');
     fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.ui-error')).toBeNull();
   });
 });
