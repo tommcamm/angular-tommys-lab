@@ -21,7 +21,7 @@
             </div>
           }
           <div class="card-footer">
-            <a class="open" [routerLink]="exp.slug">Open &rarr;</a>
+            <a class="open" [routerLink]="exp.slug" [attr.aria-label]="'Open ' + exp.title">Open &rarr;</a>
             <a
               class="source"
               [href]="sourceUrl(exp)"

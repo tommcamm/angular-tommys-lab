@@ -34,7 +34,7 @@
   transform: translateY(-2px);
 }
 
-.card-main { color: inherit; text-decoration: none; }
+.card-main { display: block; color: inherit; text-decoration: none; }
 .card-main h3 { margin: 0 0 0.35rem; font-size: 1.1rem; color: var(--text); }
 .card-main p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
 
