@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import type { TosItem } from '../flow-options';
 import type { TosAck } from '../flow-model';
+import { FieldError } from '../field-error';
 
 @Component({
   selector: 'tommy-tos-step',
-  imports: [FormField],
+  imports: [FormField, FieldError],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let f = field();
     <div class="ui-stack">
       @for (ack of f; track $index; let i = $index) {
         @let item = items()[i];
-        @let state = ack.accepted();
         <label class="ui-tos-item">
           <input type="checkbox" [formField]="ack.accepted" />
           <span class="ui-field">
@@ -21,9 +21,7 @@ import type { TosAck } from '../flow-model';
               @if (item.required) { <span class="ui-required">*</span> }
             </span>
             <span class="ui-muted">{{ item.body }}</span>
-            @if ((showErrors() || state.touched()) && state.invalid()) {
-              <span class="ui-error">{{ state.errors()[0]?.message }}</span>
-            }
+            <tommy-field-error [field]="ack.accepted" [show]="showErrors()" />
           </span>
         </label>
       }

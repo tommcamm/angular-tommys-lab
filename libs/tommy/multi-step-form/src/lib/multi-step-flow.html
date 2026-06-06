@@ -28,6 +28,7 @@
     @case ('form') {
       @if (flowForm(); as ff) {
         <tommy-step-indicator [labels]="stepLabels" [activeIndex]="stepIndex()" />
+        <tommy-error-banner [messages]="stepErrorMessages()" />
 
         @switch (currentStep()) {
           @case ('profile') {
@@ -35,6 +36,7 @@
           }
           @case ('account') {
             <tommy-account-step [field]="ff.form.account" [showErrors]="showErrors()" />
+            <!-- Unexpected/thrown submit errors only; server field errors surface via the banner + inline. -->
             @if (submitError()) {
               <p class="ui-error">{{ submitError() }}</p>
             }
@@ -47,9 +49,9 @@
         <div class="ui-row">
           <button type="button" class="ui-btn" [disabled]="isFirst()" (click)="back()">Back</button>
           @if (isLast()) {
-            <button type="button" class="ui-btn ui-btn-primary" [disabled]="!currentStepValid()" (click)="onSubmit()">Submit</button>
+            <button type="button" class="ui-btn ui-btn-primary" (click)="onSubmit()">Submit</button>
           } @else {
-            <button type="button" class="ui-btn ui-btn-primary" [disabled]="!currentStepValid()" (click)="next()">Next</button>
+            <button type="button" class="ui-btn ui-btn-primary" (click)="next()">Next</button>
           }
         </div>
       }

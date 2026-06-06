@@ -20,13 +20,14 @@ const OPTS: FlowOptions = {
 @Component({
   imports: [ProfileStep, AccountStep, TosStep],
   template: `
-    <tommy-profile-step [field]="form.profile" />
-    <tommy-account-step [field]="form.account" />
-    <tommy-tos-step [field]="form.tos" [items]="opts.tos" />
+    <tommy-profile-step [field]="form.profile" [showErrors]="show()" />
+    <tommy-account-step [field]="form.account" [showErrors]="show()" />
+    <tommy-tos-step [field]="form.tos" [items]="opts.tos" [showErrors]="show()" />
   `,
 })
 class Host {
   readonly opts = OPTS;
+  readonly show = signal(false);
   private readonly model = signal<FlowModel>(emptyFlowModel(OPTS));
   readonly form: FieldTree<FlowModel> = form(this.model, flowSchema(OPTS));
 }
@@ -42,5 +43,29 @@ describe('step components (smoke)', () => {
     expect(text).toContain('Terms');
     expect(text).toContain('News');
     expect(el.querySelectorAll('input[type=checkbox]').length).toBe(2);
+  });
+
+  it('hides field errors until showErrors is true', () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelectorAll('.ui-error').length).toBe(0);
+
+    fixture.componentInstance.show.set(true);
+    fixture.detectChanges();
+    const text = el.textContent ?? '';
+    expect(el.querySelectorAll('.ui-error').length).toBeGreaterThan(0);
+    expect(text).toContain('First name is required');
+    expect(text).toContain('Username is required');
+    expect(text).toContain('You must accept this to continue');
+  });
+
+  it('keeps field errors hidden after a field is touched while showErrors is false', () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    // Marking a field touched (what a blur does) must NOT reveal errors while showErrors is false.
+    fixture.componentInstance.form.profile.firstName().markAsTouched();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.ui-error').length).toBe(0);
   });
 });

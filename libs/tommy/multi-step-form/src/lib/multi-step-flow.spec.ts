@@ -117,8 +117,90 @@ describe('MultiStepFlow', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('already taken'); // submitError rendered
-    expect(text).toContain('Username'); // back on the account step
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Username'); // back on the account step
+    const alert = el.querySelector('[role=alert]');
+    expect(alert?.textContent).toContain('already taken'); // surfaced via the banner
+  });
+
+  it('does not show errors or the banner on blur, before Next is pressed', async () => {
+    const fixture = await startFlow();
+    const el = fixture.nativeElement as HTMLElement;
+    const firstName = el.querySelector<HTMLInputElement>('#ms-firstName');
+    firstName?.dispatchEvent(new Event('blur', { bubbles: true }));
+    fixture.detectChanges();
+    expect(el.querySelector('.ui-error')).toBeNull();
+    expect(el.querySelector('[role=alert]')).toBeNull();
+  });
+
+  it('reveals the banner + inline errors when Next is clicked on an invalid step, and stays put', async () => {
+    const fixture = await startFlow();
+    clickButton(fixture, 'Next');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('First name'); // still on the profile step
+    const alert = el.querySelector('[role=alert]');
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent).toContain('First name is required');
+    expect(el.querySelectorAll('.ui-error').length).toBeGreaterThan(0);
+  });
+
+  it('keeps the Next button enabled even when the step is invalid', async () => {
+    const fixture = await startFlow();
+    const el = fixture.nativeElement as HTMLElement;
+    const next = Array.from(el.querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'Next',
+    );
+    expect(next).toBeDefined();
+    expect(next?.disabled).toBe(false);
+  });
+
+  it('clears the banner live once the step becomes valid, then advances', async () => {
+    const fixture = await startFlow();
+    clickButton(fixture, 'Next'); // reveal errors on the (empty) profile step
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role=alert]')).not.toBeNull();
+
+    setInput(fixture, '#ms-firstName', 'Tommy');
+    setInput(fixture, '#ms-lastName', 'C');
+    setInput(fixture, '#ms-email', 'tommy@example.com');
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role=alert]')).toBeNull();
+
+    clickButton(fixture, 'Next');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Username');
+  });
+
+  it('on the last step, Submit reveals the banner and does not submit when a required item is unaccepted', async () => {
+    const fixture = await startFlow();
+    setInput(fixture, '#ms-firstName', 'Tommy');
+    setInput(fixture, '#ms-lastName', 'C');
+    setInput(fixture, '#ms-email', 'tommy@example.com');
+    clickButton(fixture, 'Next');
+    setInput(fixture, '#ms-username', 'tommy123');
+    setInput(fixture, '#ms-password', 'super-secret');
+    setInput(fixture, '#ms-confirm', 'super-secret');
+    clickButton(fixture, 'Next');
+    // Now on the TOS step with the required checkbox unaccepted.
+    clickButton(fixture, 'Submit');
+
+    const el = fixture.nativeElement as HTMLElement;
+    const alert = el.querySelector('[role=alert]');
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent).toContain('You must accept this to continue');
+    expect(el.textContent).not.toContain('All set'); // did not submit
+  });
+
+  it('shows a standalone error message (not the banner) when submit throws unexpectedly', async () => {
+    stub.submitFlow = () => Promise.reject(new Error('network down'));
+    const fixture = await startFlow();
+    await fillThroughTos(fixture, 'tommy123');
+
+    clickButton(fixture, 'Submit');
+    await fixture.whenStable();
+    await Promise.resolve();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('An unexpected error occurred'); // standalone submitError paragraph
+    expect(el.textContent).toContain('Username'); // returned to the account step
   });
 });
