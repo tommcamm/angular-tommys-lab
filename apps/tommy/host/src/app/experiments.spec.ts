@@ -1,10 +1,4 @@
-import {
-  EXPERIMENTS,
-  REPO_URL,
-  groupExperiments,
-  sourceUrl,
-  tagVariant,
-} from './experiments';
+import { EXPERIMENTS, REPO_URL, groupExperiments, sourceUrl, tagVariant, type Experiment } from './experiments';
 
 describe('experiments registry', () => {
   it('renames and regroups both form experiments', () => {
@@ -34,5 +28,18 @@ describe('experiments registry', () => {
     expect(tagVariant('signals')).toBe('blue');
     expect(tagVariant('multi-step')).toBe('green');
     expect(tagVariant('totally-unknown')).toBe('neutral');
+  });
+
+  it('handles multiple groups, preserving insertion order', () => {
+    const load = () => Promise.resolve({} as never);
+    const fake = [
+      { slug: 'a', title: 'A', description: '', group: 'G1', tags: [], sourcePath: 'p/a', load },
+      { slug: 'b', title: 'B', description: '', group: 'G2', tags: [], sourcePath: 'p/b', load },
+      { slug: 'c', title: 'C', description: '', group: 'G1', tags: [], sourcePath: 'p/c', load },
+    ] satisfies Experiment[];
+    const groups = groupExperiments(fake);
+    expect(groups.map((g) => g.name)).toEqual(['G1', 'G2']);
+    expect(groups[0].experiments.map((e) => e.slug)).toEqual(['a', 'c']);
+    expect(groups[1].experiments.map((e) => e.slug)).toEqual(['b']);
   });
 });

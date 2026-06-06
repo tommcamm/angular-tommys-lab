@@ -9,7 +9,7 @@ export const REPO_URL = 'https://github.com/tommcamm/angular-tommys-lab';
 /** Badge color variants for experiment tags. */
 export type TagVariant = 'blue' | 'orange' | 'green' | 'neutral';
 
-const TAG_VARIANTS: Record<string, TagVariant> = {
+const TAG_VARIANTS: Readonly<Record<string, TagVariant>> = {
   signals: 'blue',
   experimental: 'orange',
   'multi-step': 'green',
@@ -93,5 +93,6 @@ export function groupExperiments(
 
 /** Full GitHub URL for an experiment's source folder. */
 export function sourceUrl(e: Experiment): string {
+  // Branch is intentionally hard-coded: this lab only ever lives on `main`.
   return `${REPO_URL}/tree/main/${e.sourcePath}`;
 }
