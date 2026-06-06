@@ -1,16 +1,15 @@
-:host {
-  display: block;
-  max-width: 60rem;
-}
+:host { display: block; max-width: 64rem; }
 
-.hero h1 {
-  margin: 0 0 0.25rem;
-  font-size: 2rem;
-}
+.hero h1 { margin: 0 0 0.25rem; font-size: 2rem; color: var(--text); }
+.hero p { margin: 0 0 2rem; color: var(--text-muted); }
 
-.hero p {
-  margin: 0 0 2rem;
-  color: #57606a;
+.group + .group { margin-top: 2rem; }
+.group-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .grid {
@@ -22,36 +21,49 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 1.25rem;
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
-  background: #fff;
-  color: inherit;
-  text-decoration: none;
+  background: var(--surface);
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
-
 .card:hover {
-  border-color: #1f6feb;
-  box-shadow: 0 6px 18px rgba(31, 111, 235, 0.12);
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
   transform: translateY(-2px);
 }
 
-.card h2 {
-  margin: 0;
-  font-size: 1.1rem;
-}
+.card-main { color: inherit; text-decoration: none; }
+.card-main h3 { margin: 0 0 0.35rem; font-size: 1.1rem; color: var(--text); }
+.card-main p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
 
-.card p {
-  margin: 0;
-  flex: 1;
-  color: #57606a;
-  font-size: 0.9rem;
-}
-
-.open {
-  color: #1f6feb;
+.tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.badge {
+  padding: 0.1rem 0.55rem;
+  border-radius: 1rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  font-size: 0.9rem;
 }
+.badge[data-variant='blue'] { background: var(--badge-blue-bg); color: var(--badge-blue-fg); }
+.badge[data-variant='orange'] { background: var(--badge-orange-bg); color: var(--badge-orange-fg); }
+.badge[data-variant='green'] { background: var(--badge-green-bg); color: var(--badge-green-fg); }
+.badge[data-variant='neutral'] { background: var(--badge-neutral-bg); color: var(--badge-neutral-fg); }
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+.open { color: var(--accent); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+.source:hover { color: var(--text); }
+.source tommy-github-icon { width: 1rem; height: 1rem; }

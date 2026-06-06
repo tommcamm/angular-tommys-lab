@@ -1,16 +1,41 @@
 <header class="hero">
-  <h1>Tommy Labs</h1>
+  <h1>Tommy's Angular Lab</h1>
   <p>A playground for small Angular experiments. Pick one to dive in.</p>
 </header>
 
-<section class="grid">
-  @for (experiment of experiments; track experiment.slug) {
-    <a class="card" [routerLink]="experiment.slug">
-      <h2>{{ experiment.title }}</h2>
-      <p>{{ experiment.description }}</p>
-      <span class="open">Open &rarr;</span>
-    </a>
-  } @empty {
-    <p>No experiments registered yet.</p>
-  }
-</section>
+@for (group of groups; track group.name) {
+  <section class="group">
+    <h2 class="group-title">{{ group.name }}</h2>
+    <div class="grid">
+      @for (exp of group.experiments; track exp.slug) {
+        <article class="card">
+          <a class="card-main" [routerLink]="exp.slug">
+            <h3>{{ exp.title }}</h3>
+            <p>{{ exp.description }}</p>
+          </a>
+          @if (exp.tags.length) {
+            <div class="tags">
+              @for (tag of exp.tags; track tag) {
+                <span class="badge" [attr.data-variant]="tagVariant(tag)">{{ tag }}</span>
+              }
+            </div>
+          }
+          <div class="card-footer">
+            <a class="open" [routerLink]="exp.slug">Open &rarr;</a>
+            <a
+              class="source"
+              [href]="sourceUrl(exp)"
+              target="_blank"
+              rel="noopener noreferrer"
+              [attr.aria-label]="'View ' + exp.title + ' source on GitHub'"
+            >
+              <tommy-github-icon /> Source ↗
+            </a>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+} @empty {
+  <p>No experiments registered yet.</p>
+}

@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EXPERIMENTS } from '../experiments';
+import { groupExperiments, sourceUrl, tagVariant } from '../experiments';
+import { GithubIcon } from '../shell/github-icon';
 
 @Component({
   selector: 'tommy-home',
-  imports: [RouterLink],
+  imports: [RouterLink, GithubIcon],
   templateUrl: './home.html',
   styleUrl: './home.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
-  protected readonly experiments = EXPERIMENTS;
+  protected readonly groups = groupExperiments();
+  protected readonly sourceUrl = sourceUrl;
+  protected readonly tagVariant = tagVariant;
 }
