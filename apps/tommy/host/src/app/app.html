@@ -1,0 +1,24 @@
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/">🧪 Tommy Labs</a>
+
+    <nav>
+      <p class="nav-heading">Experiments</p>
+      @for (experiment of experiments; track experiment.slug) {
+        <a
+          class="nav-link"
+          [routerLink]="experiment.slug"
+          routerLinkActive="active"
+        >
+          {{ experiment.title }}
+        </a>
+      } @empty {
+        <p class="nav-empty">None yet</p>
+      }
+    </nav>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

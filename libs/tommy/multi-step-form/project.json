@@ -1,0 +1,13 @@
+{
+  "name": "tommy-multi-step-form",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/tommy/multi-step-form/src",
+  "prefix": "tommy",
+  "projectType": "library",
+  "tags": ["scope:tommy", "type:experiment"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
