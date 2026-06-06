@@ -77,10 +77,8 @@ export class MultiStepFlow {
     const seen = new Set<unknown>();
     const messages: string[] = [];
     for (const error of state.errorSummary()) {
-      if (error.fieldTree) {
-        if (seen.has(error.fieldTree)) continue;
-        seen.add(error.fieldTree);
-      }
+      if (seen.has(error.fieldTree)) continue;
+      seen.add(error.fieldTree);
       if (error.message) messages.push(error.message);
     }
     return messages;
