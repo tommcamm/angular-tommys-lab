@@ -1,10 +1,55 @@
 # tommy-multi-step-form
 
-This library was generated with [Nx](https://nx.dev).
+Experiment #2 in the Tommy Labs workspace: a **signup-style multi-step wizard** built
+on Angular 21's experimental signal forms (`@angular/forms/signals`). Where
+experiment #1 (`@tommy/signal-forms`) is a single flat form, this one explores the
+patterns you reach for in a real flow.
+
+## What it demonstrates
+
+- **Backend-driven validation** — a simulated backend (`FlowService`) returns
+  `FlowOptions` (e.g. username min/max length, password min length) when the flow
+  starts; the schema is *parameterized* by those constraints.
+- **Reusable, composed schemas** — `profileSchema` and `accountSchema(options)` are
+  composed onto one root model via `apply` / `applyEach` in `flowSchema(options)`.
+- **Cross-field validation** — `confirmPassword` must match `password`, via a
+  `validate` rule that reads the sibling value (`ctx.valueOf(p.password)`).
+- **A dynamic array** — a 0..\* Terms-of-Service list; each required item must be
+  acknowledged (`applyEach` over the `tos` array).
+- **The `submit()` server-error pathway** — on submit, a server "username taken"
+  rejection is mapped back onto the username field and the user is returned to the
+  account step.
+- **One root form, built after load** — `createFlowForm(options, injector)` builds
+  the form inside `runInInjectionContext` once the options resolve. Step components
+  receive a `FieldTree` slice as an input; the container owns phase/step state,
+  validity-gated navigation, and submit.
+
+## Flow
+
+```
+intro ─(Start)→ loading ─→ [ profile → account → tos ] ─(Submit)→ submitting ─→ done
+                                ▲ back / next, gated by per-step validity        └─(server error)→ account
+```
+
+## File map
+
+| File | Responsibility |
+| --- | --- |
+| `flow-options.ts` | Backend contract types: `FlowOptions`, `TosItem`, `FlowSubmission`, `SubmitResult`. |
+| `flow.service.ts` | Simulated backend (Promises + `setTimeout`); deterministic — username `"taken"` is always rejected. |
+| `flow-model.ts` | Form model (`ProfileGroup`/`AccountGroup`/`TosAck`/`FlowModel`) + `emptyFlowModel(options)`. |
+| `flow-schema.ts` | Reusable `profileSchema`, `accountSchema(options)`, and the composed `flowSchema(options)`. |
+| `create-flow-form.ts` | `createFlowForm(options, injector)` → `{ model, form }`, built via `runInInjectionContext`. |
+| `steps/profile-step.ts`, `account-step.ts`, `tos-step.ts` | Presentational, OnPush; render a `FieldTree` slice via `[formField]`. |
+| `step-indicator.ts` | "Step n of N" indicator. |
+| `multi-step-flow.ts` | Entry component: the phase/step state machine + submit. Exported as `MultiStepFlow`. |
+| `ui.css` | The `.ui-*` design layer (see Styling). |
 
 ## Running unit tests
 
-Run `pnpm nx test tommy-multi-step-form` to execute the unit tests.
+Run `pnpm nx test tommy-multi-step-form` to execute the unit tests (logic-first:
+schemas, the service, and DOM-driven container tests for the happy path and the
+server-error path).
 
 ## Styling
 
@@ -20,7 +65,7 @@ Run `pnpm nx test tommy-multi-step-form` to execute the unit tests.
 - `libs/tommy/multi-step-form/src/lib/ui.css` is the single design-layer file: it defines all `.ui-*` semantic classes (plain CSS — no `@apply`). This file is registered in the host build's `styles` array so global styles reach lib components regardless of view encapsulation.
 
 ### Why not spartan-ng
-`@spartan-ng/helm` does not exist on npm — spartan-ng distributes individual component packages (e.g. `@spartan-ng/ui-button-helm`). Since the `.ui-*` design layer is hand-authored CSS and no spartan-ng primitives are used in any component yet, there was no value in installing individual spartan-ng packages at this stage. They can be added per-component in later tasks if needed.
+`@spartan-ng/helm` does not exist on npm — spartan-ng distributes individual component packages (e.g. `@spartan-ng/ui-button-helm`). Since the `.ui-*` design layer is hand-authored CSS and no spartan-ng primitives are used in any component yet, there was no value in installing individual spartan-ng packages at this stage. They can be added per-component later if richer components are wanted.
 
 ### Design decisions
 - Components reference **only** `.ui-*` class names — no raw Tailwind utilities in templates.
