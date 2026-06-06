@@ -27,7 +27,7 @@
 
     @case ('form') {
       @if (flowForm(); as ff) {
-        <tommy-step-indicator [steps]="steps" [activeIndex]="stepIndex()" />
+        <tommy-step-indicator [labels]="stepLabels" [activeIndex]="stepIndex()" />
 
         @switch (currentStep()) {
           @case ('profile') {

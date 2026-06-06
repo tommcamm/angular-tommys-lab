@@ -42,7 +42,8 @@ export class MultiStepFlow {
   protected readonly submitError = signal<string | null>(null);
   protected readonly showErrors = signal(false);
 
-  protected readonly steps = STEPS;
+  /** Display labels for the step indicator (parallel to STEPS). */
+  protected readonly stepLabels: readonly string[] = ['Profile', 'Account', 'Terms'];
   protected readonly currentStep = computed(() => STEPS[this.stepIndex()]);
   protected readonly isFirst = computed(() => this.stepIndex() === 0);
   protected readonly isLast = computed(() => this.stepIndex() === STEPS.length - 1);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'tommy-step-indicator',
@@ -18,9 +18,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   `,
 })
 export class StepIndicator {
-  readonly steps = input.required<readonly string[]>();
+  /** Human-readable step labels, in order. */
+  readonly labels = input.required<readonly string[]>();
   readonly activeIndex = input.required<number>();
-  protected readonly labels = computed(() =>
-    this.steps().map((s) => s.charAt(0).toUpperCase() + s.slice(1)),
-  );
 }
