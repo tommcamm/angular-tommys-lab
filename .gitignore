@@ -55,6 +55,7 @@ Thumbs.db
 .claude
 .playwright-mcp
 .vercel
+.superpowers
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
