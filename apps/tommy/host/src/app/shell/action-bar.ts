@@ -18,7 +18,7 @@ import { ThemeService } from './theme.service';
       ☰
     </button>
 
-    <button type="button" class="search" (click)="openSearch.emit()">
+    <button type="button" class="search" aria-label="Search experiments" (click)="openSearch.emit()">
       <span aria-hidden="true">🔍</span>
       <span class="search-label">Search experiments…</span>
       <kbd>⌘K</kbd>

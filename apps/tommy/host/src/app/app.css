@@ -32,7 +32,8 @@
 }
 
 /* Experiment routes: a forced-light "surface" so each experiment's own
-   light-background CSS keeps working unchanged in either theme. */
+   light-background CSS keeps working unchanged in either theme.
+   These overrides must match the :root light tokens in styles.css. */
 .main.surface-host {
   --bg: #f6f8fa;
   --surface: #ffffff;
@@ -41,6 +42,8 @@
   --text: #1f2328;
   --text-muted: #57606a;
   --accent: #1f6feb;
+  --accent-soft: #ddf4ff;
+  --shadow: 0 6px 18px rgba(31, 111, 235, 0.12);
   margin: 1.5rem;
   padding: 2rem;
   background: #ffffff;

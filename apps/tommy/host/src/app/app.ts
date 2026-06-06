@@ -59,6 +59,10 @@ export class App {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       this.palette().toggle();
+      return;
+    }
+    if (e.key === 'Escape' && this.drawerOpen()) {
+      this.closeDrawer();
     }
   }
 }
