@@ -1,0 +1,32 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-06-multi-step-form-deferred-errors.md",
+  "tasks": [
+    {
+      "id": 6,
+      "subject": "Task 1: ErrorBanner component + banner styles",
+      "status": "pending",
+      "description": "**Goal:** A presentational `tommy-error-banner` that renders a `role=\"alert\"` yellow warning with a bulleted list of messages, and nothing when the list is empty.\n\n**Files:**\n- Create: `libs/tommy/multi-step-form/src/lib/error-banner.ts`\n- Create: `libs/tommy/multi-step-form/src/lib/error-banner.spec.ts`\n- Modify: `libs/tommy/multi-step-form/src/lib/ui.css`\n\n**Acceptance Criteria:**\n- renders nothing when messages empty\n- renders role=alert with title + one li per message\n- ui-banner-* classes added to ui.css\n\n**Verify:** `pnpm nx test tommy-multi-step-form`\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/error-banner.ts\", \"libs/tommy/multi-step-form/src/lib/error-banner.spec.ts\", \"libs/tommy/multi-step-form/src/lib/ui.css\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form\", \"acceptanceCriteria\": [\"renders nothing when messages empty\", \"renders role=alert with one li per message\", \"ui-banner-* classes added to ui.css\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 2: FieldError generic component",
+      "status": "pending",
+      "description": "**Goal:** A generic `tommy-field-error` that renders a field's first error only when `show && field.invalid()`.\n\n**Files:**\n- Create: `libs/tommy/multi-step-form/src/lib/field-error.ts`\n- Create: `libs/tommy/multi-step-form/src/lib/field-error.spec.ts`\n\n**Acceptance Criteria:**\n- show=false hides error even when invalid\n- show=true + invalid shows first error message in span.ui-error\n- valid field shows nothing\n- emits span (not p)\n\n**Verify:** `pnpm nx test tommy-multi-step-form`\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/field-error.ts\", \"libs/tommy/multi-step-form/src/lib/field-error.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form\", \"acceptanceCriteria\": [\"show=false hides error even when invalid\", \"show=true shows first error message\", \"valid field shows nothing\", \"emits span not p\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 3: Steps reveal errors via FieldError, not on blur",
+      "status": "pending",
+      "blockedBy": [7],
+      "description": "**Goal:** Replace inline `(showErrors() || x.touched()) && x.invalid()` blocks in the three step components with `<tommy-field-error>`, dropping `touched()`.\n\n**Files:**\n- Modify: `libs/tommy/multi-step-form/src/lib/steps/profile-step.ts`\n- Modify: `libs/tommy/multi-step-form/src/lib/steps/account-step.ts`\n- Modify: `libs/tommy/multi-step-form/src/lib/steps/tos-step.ts`\n- Modify: `libs/tommy/multi-step-form/src/lib/steps/steps.spec.ts`\n\n**Acceptance Criteria:**\n- no step references .touched()\n- fields use tommy-field-error\n- errors hidden until showErrors true\n- smoke test still passes\n\n**Verify:** `pnpm nx test tommy-multi-step-form`\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/steps/profile-step.ts\", \"libs/tommy/multi-step-form/src/lib/steps/account-step.ts\", \"libs/tommy/multi-step-form/src/lib/steps/tos-step.ts\", \"libs/tommy/multi-step-form/src/lib/steps/steps.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form\", \"acceptanceCriteria\": [\"no touched() in step components\", \"fields use tommy-field-error\", \"errors hidden until showErrors true\", \"smoke test still passes\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 4: Error banner + always-clickable nav in container",
+      "status": "pending",
+      "blockedBy": [6, 8],
+      "description": "**Goal:** Show the banner between indicator and step, remove `[disabled]` from Next/Submit, and route the handled server error through the banner/inline.\n\n**Files:**\n- Modify: `libs/tommy/multi-step-form/src/lib/multi-step-flow.ts`\n- Modify: `libs/tommy/multi-step-form/src/lib/multi-step-flow.html`\n- Modify: `libs/tommy/multi-step-form/src/lib/multi-step-flow.spec.ts`\n\n**Acceptance Criteria:**\n- no errors/banner on blur\n- Next on invalid shows banner+inline and stays\n- Next/Submit never disabled\n- banner clears live then advances\n- server error shown in role=alert on account step\n- happy path reaches confirmation id\n\n**Verify:** `pnpm nx test tommy-multi-step-form && pnpm nx lint tommy-multi-step-form && pnpm nx build tommy-multi-step-form`\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/lib/multi-step-flow.ts\", \"libs/tommy/multi-step-form/src/lib/multi-step-flow.html\", \"libs/tommy/multi-step-form/src/lib/multi-step-flow.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-multi-step-form && pnpm nx lint tommy-multi-step-form && pnpm nx build tommy-multi-step-form\", \"acceptanceCriteria\": [\"no errors/banner on blur\", \"Next on invalid shows banner+inline and stays\", \"Next/Submit never disabled\", \"banner clears live then advances\", \"server error shown in role=alert on account step\", \"happy path reaches confirmation id\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-06T00:00:00Z"
+}
