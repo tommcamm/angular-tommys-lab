@@ -1,9 +1,9 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { form, type FieldTree } from '@angular/forms/signals';
-import type { FlowOptions } from '../flow-options';
-import { emptyFlowModel, type FlowModel } from '../flow-model';
-import { flowSchema } from '../flow-schema';
+import type { FlowOptions } from '../model/flow-options';
+import { emptyFlowModel, type FlowModel } from '../model/flow-model';
+import { flowSchema } from '../model/flow-schema';
 import { ProfileStep } from './profile-step';
 import { AccountStep } from './account-step';
 import { TosStep } from './tos-step';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
-import type { ProfileGroup } from '../flow-model';
-import { FieldError } from '../field-error';
+import type { ProfileGroup } from '../model/flow-model';
+import { FieldError } from '../ui/field-error';
 
 @Component({
   selector: 'tommy-profile-step',

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { MultiStepFlow } from './multi-step-flow';
-import { FlowService } from './flow.service';
-import type { FlowOptions, FlowSubmission, SubmitResult } from './flow-options';
+import { FlowService } from './model/flow.service';
+import type { FlowOptions, FlowSubmission, SubmitResult } from './model/flow-options';
 
 const OPTS: FlowOptions = {
   username: { minLength: 4, maxLength: 20 },

@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, Injector, computed, inject, signal } from '@angular/core';
 import { submit } from '@angular/forms/signals';
-import { FlowService } from './flow.service';
-import { createFlowForm, type FlowForm } from './create-flow-form';
-import type { FlowOptions, FlowSubmission } from './flow-options';
-import type { FlowModel } from './flow-model';
+import { FlowService } from './model/flow.service';
+import { createFlowForm, type FlowForm } from './model/create-flow-form';
+import type { FlowOptions, FlowSubmission } from './model/flow-options';
+import type { FlowModel } from './model/flow-model';
 import { ProfileStep } from './steps/profile-step';
 import { AccountStep } from './steps/account-step';
 import { TosStep } from './steps/tos-step';
-import { StepIndicator } from './step-indicator';
-import { ErrorBanner } from './error-banner';
+import { StepIndicator } from './ui/step-indicator';
+import { ErrorBanner } from './ui/error-banner';
 
 type Phase = 'intro' | 'loading' | 'form' | 'submitting' | 'done' | 'error';
 type StepKey = 'profile' | 'account' | 'tos';
