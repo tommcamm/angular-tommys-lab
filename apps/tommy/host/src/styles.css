@@ -1,1 +1,10 @@
+/* Tailwind v4 — theme tokens + utilities only.
+   Preflight (Tailwind's global reset) is intentionally OMITTED: this is a shared host
+   that also renders the home page and the signal-forms experiment, whose CSS was
+   written against browser defaults. Importing the full reset would alter their cascade. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@source '../../../../libs/tommy/multi-step-form';
+
 /* You can add global styles to this file, and also import other style files */

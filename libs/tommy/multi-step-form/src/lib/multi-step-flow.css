@@ -1,4 +1,1 @@
-:host { display: block; max-width: 32rem; font-family: system-ui, sans-serif; }
-.ms-card { padding: 1.5rem; border: 1px solid #d0d7de; border-radius: 0.75rem; }
-.ms-btn { padding: 0.5rem 0.875rem; border-radius: 0.5rem; border: 1px solid #d0d7de; cursor: pointer; }
-.ms-btn-primary { background: #1f883d; color: #fff; border-color: transparent; }
+:host { display: block; }

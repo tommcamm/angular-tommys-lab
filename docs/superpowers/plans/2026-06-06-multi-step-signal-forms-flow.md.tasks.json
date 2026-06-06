@@ -5,7 +5,7 @@
     {
       "id": 7,
       "subject": "Task 1: Scaffold @tommy/multi-step-form lib + host wiring",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** New Angular library registered as experiment #2, reachable at /multi-step-form with a minimal intro placeholder.\n\n**Files:** generated libs/tommy/multi-step-form/**; multi-step-flow.ts/.html/.css; src/index.ts; tsconfig.base.json (alias); apps/tommy/host/src/app/experiments.ts (+entry).\n\n**Acceptance Criteria:** lib tagged scope:tommy,type:experiment; @tommy/multi-step-form alias resolves; EXPERIMENTS entry + /multi-step-form route render; intro Start button; lint+test pass.\n\n**Verify:** pnpm nx serve tommy-host (route renders); pnpm nx lint tommy-multi-step-form; pnpm nx build tommy-host.\n\n```json:metadata\n{\"files\": [\"libs/tommy/multi-step-form/src/index.ts\",\"libs/tommy/multi-step-form/src/lib/multi-step-flow.ts\",\"tsconfig.base.json\",\"apps/tommy/host/src/app/experiments.ts\"], \"verifyCommand\": \"pnpm nx lint tommy-multi-step-form && pnpm nx test tommy-multi-step-form && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"lib tagged scope:tommy,type:experiment\",\"alias resolves\",\"EXPERIMENTS entry + route render\",\"intro Start renders\",\"lint+test pass\"]}\n```"
     },
     {
