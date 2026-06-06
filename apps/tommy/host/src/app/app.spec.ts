@@ -21,4 +21,12 @@ describe('App', () => {
     expect(links.length).toBe(EXPERIMENTS.length);
     expect(links[0].textContent?.trim()).toBe(EXPERIMENTS[0].title);
   });
+
+  it('hosts the command palette and action bar', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('tommy-action-bar')).toBeTruthy();
+    expect(el.querySelector('tommy-command-palette')).toBeTruthy();
+  });
 });

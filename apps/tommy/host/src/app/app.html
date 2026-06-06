@@ -1,24 +1,26 @@
-<div class="layout">
+<div class="layout" [class.drawer-open]="drawerOpen()">
   <aside class="sidebar">
-    <a class="brand" routerLink="/">🧪 Tommy Labs</a>
-
-    <nav>
-      <p class="nav-heading">Experiments</p>
-      @for (experiment of experiments; track experiment.slug) {
-        <a
-          class="nav-link"
-          [routerLink]="experiment.slug"
-          routerLinkActive="active"
-        >
-          {{ experiment.title }}
-        </a>
-      } @empty {
-        <p class="nav-empty">None yet</p>
-      }
-    </nav>
+    <tommy-side-nav (navigate)="closeDrawer()" />
   </aside>
 
-  <main class="content">
-    <router-outlet />
-  </main>
+  @if (drawerOpen()) {
+    <button
+      class="backdrop"
+      type="button"
+      aria-label="Close navigation"
+      (click)="closeDrawer()"
+    ></button>
+  }
+
+  <div class="content">
+    <tommy-action-bar
+      (openSearch)="openSearch()"
+      (toggleDrawer)="toggleDrawer()"
+    />
+    <main class="main" [class.surface-host]="!isHome()">
+      <router-outlet />
+    </main>
+  </div>
 </div>
+
+<tommy-command-palette />
