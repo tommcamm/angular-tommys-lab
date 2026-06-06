@@ -1,0 +1,59 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-06-tommy-angular-lab-shell-redesign.md",
+  "tasks": [
+    {
+      "id": 6,
+      "subject": "Task 1: Extend the experiments registry",
+      "status": "pending",
+      "description": "**Goal:** Make `experiments.ts` carry grouping/tags/source metadata and expose pure helpers, with renamed titles.\n\n**Files:**\n- Modify: `apps/tommy/host/src/app/experiments.ts`\n- Test: `apps/tommy/host/src/app/experiments.spec.ts` (create)\n\n**Acceptance Criteria:**\n- Experiment has group/tags/sourcePath; titles renamed to Simple Form & Wizard Form under Signal Forms\n- groupExperiments groups by group preserving order\n- sourceUrl returns REPO_URL/tree/main/sourcePath\n- tagVariant maps known tags with neutral fallback\n- slugs unchanged\n\n**Verify:** `pnpm nx test tommy-host` -> experiments suite passes.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/experiments.ts\", \"apps/tommy/host/src/app/experiments.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host\", \"acceptanceCriteria\": [\"Experiment has group/tags/sourcePath; titles renamed under Signal Forms\", \"groupExperiments groups by group preserving order\", \"sourceUrl returns REPO_URL/tree/main/sourcePath\", \"tagVariant maps known tags with neutral fallback\", \"slugs unchanged\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 2: Theming — tokens, ThemeService, no-FOUC bootstrap",
+      "status": "pending",
+      "description": "**Goal:** A data-theme-driven design-token system with a tiny service and a flash-free initial paint; brand title set.\n\n**Files:**\n- Modify: `apps/tommy/host/src/styles.css`\n- Modify: `apps/tommy/host/src/index.html`\n- Create: `apps/tommy/host/src/app/shell/theme.service.ts`\n- Test: `apps/tommy/host/src/app/shell/theme.service.spec.ts`\n\n**Acceptance Criteria:**\n- light tokens on :root, dark on :root[data-theme=dark], body+reduced-motion guard\n- ThemeService inits from storage/media defaulting light; toggle writes data-theme+persists; guarded access (no empty catch)\n- index.html title + theme-color meta + no-FOUC inline script\n\n**Verify:** `pnpm nx test tommy-host` -> ThemeService suite passes.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/styles.css\", \"apps/tommy/host/src/index.html\", \"apps/tommy/host/src/app/shell/theme.service.ts\", \"apps/tommy/host/src/app/shell/theme.service.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host\", \"acceptanceCriteria\": [\"light tokens :root, dark :root[data-theme=dark], body+reduced-motion\", \"ThemeService inits storage/media default light; toggle writes data-theme+persists; guarded\", \"index.html title + theme-color + no-FOUC script\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 3: GitHub icon component",
+      "status": "pending",
+      "description": "**Goal:** A reusable inline-SVG GitHub mark used by the action bar, sidebar, and source links (icon, not the word).\n\n**Files:**\n- Create: `apps/tommy/host/src/app/shell/github-icon.ts`\n\n**Acceptance Criteria:**\n- tommy-github-icon renders inline currentColor SVG, aria-hidden, host-sized\n- standalone OnPush no inputs\n\n**Verify:** `pnpm nx build tommy-host` compiles it.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/shell/github-icon.ts\"], \"verifyCommand\": \"pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"tommy-github-icon inline currentColor SVG aria-hidden host-sized\", \"standalone OnPush no inputs\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 4: SideNav component (grouped, collapsible)",
+      "status": "pending",
+      "blockedBy": [6, 8],
+      "description": "**Goal:** Brand + collapsible category groups of experiment links + a GitHub source link, emitting navigate so the mobile drawer can close.\n\n**Files:**\n- Create: `apps/tommy/host/src/app/shell/side-nav.ts`\n- Test: `apps/tommy/host/src/app/shell/side-nav.spec.ts`\n\n**Acceptance Criteria:**\n- .group-heading per group and .nav-link per experiment from groupExperiments()\n- groups collapsible default-open; collapse hides links\n- brand/link click emits navigate\n- GitHub repo link via tommy-github-icon + REPO_URL\n\n**Verify:** `pnpm nx test tommy-host` -> SideNav suite passes.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/shell/side-nav.ts\", \"apps/tommy/host/src/app/shell/side-nav.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host\", \"acceptanceCriteria\": [\".group-heading per group and .nav-link per experiment\", \"groups collapsible default-open; collapse hides links\", \"brand/link click emits navigate\", \"GitHub repo link via tommy-github-icon + REPO_URL\"]}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 5: Command palette (⌘K)",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "**Goal:** A registry-driven overlay that filters experiments, supports keyboard navigation, and routes on selection.\n\n**Files:**\n- Create: `apps/tommy/host/src/app/shell/command-palette.ts`\n- Test: `apps/tommy/host/src/app/shell/command-palette.spec.ts`\n\n**Acceptance Criteria:**\n- openPalette/close/toggle/open state\n- filter by title/group/tag (case-insensitive); empty query shows all\n- Arrow keys move active clamped; Enter routes to active+closes; Escape closes\n- selection calls Router.navigate([slug])\n\n**Verify:** `pnpm nx test tommy-host` -> CommandPalette suite passes.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/shell/command-palette.ts\", \"apps/tommy/host/src/app/shell/command-palette.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host\", \"acceptanceCriteria\": [\"openPalette/close/toggle/open state\", \"filter by title/group/tag; empty shows all\", \"Arrow keys move active clamped; Enter routes+closes; Escape closes\", \"selection calls Router.navigate([slug])\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 6: App shell — ActionBar + layout, drawer, ⌘K, light surface",
+      "status": "pending",
+      "blockedBy": [7, 8, 9, 10],
+      "description": "**Goal:** Assemble the shell: sticky action bar (search/theme/GitHub/hamburger), responsive grid with mobile drawer, global ⌘K handler, forced-light surface for experiment routes.\n\n**Files:**\n- Create: `apps/tommy/host/src/app/shell/action-bar.ts`\n- Modify: `apps/tommy/host/src/app/app.ts`, `app.html`, `app.css`, `app.routes.ts`, `app.spec.ts`\n\n**Acceptance Criteria:**\n- ActionBar: ⌘K search trigger, theme toggle wired to ThemeService, GitHub icon link, hamburger (mobile only); emits openSearch/toggleDrawer\n- App CSS-grid layout; <768px off-canvas drawer + backdrop, toggled by hamburger, closed on nav\n- Ctrl/Cmd+K toggles palette globally (preventDefault)\n- experiment routes render in .surface-host light tokens; landing does not\n- route titles end with Tommy's Angular Lab; app.spec passes\n\n**Verify:** `pnpm nx test tommy-host && pnpm nx build tommy-host` both green.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/shell/action-bar.ts\", \"apps/tommy/host/src/app/app.ts\", \"apps/tommy/host/src/app/app.html\", \"apps/tommy/host/src/app/app.css\", \"apps/tommy/host/src/app/app.routes.ts\", \"apps/tommy/host/src/app/app.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"ActionBar search/theme/GitHub/hamburger emits openSearch+toggleDrawer\", \"CSS-grid shell; <768px drawer+backdrop closing on nav\", \"Cmd/Ctrl+K toggles palette with preventDefault\", \"experiment routes in .surface-host light tokens; landing not\", \"route titles end Tommy's Angular Lab; app.spec passes\"]}\n```"
+    },
+    {
+      "id": 12,
+      "subject": "Task 7: Landing page — grouped sections, badges, source links",
+      "status": "pending",
+      "blockedBy": [6, 7, 8],
+      "description": "**Goal:** Rebuild the home page into grouped sections of cards carrying tech badges and a GitHub view-source link, themed via tokens.\n\n**Files:**\n- Modify: `apps/tommy/host/src/app/home/home.ts`, `home.html`, `home.css`\n- Test: `apps/tommy/host/src/app/home/home.spec.ts` (create)\n\n**Acceptance Criteria:**\n- .group-title per group and .card per experiment\n- tags as .badge[data-variant] chips; .source GitHub link href=sourceUrl(exp) target _blank rel noopener; Open link\n- heading Tommy's Angular Lab; styles use theme tokens\n\n**Verify:** `pnpm nx test tommy-host` -> Home suite passes.\n\n```json:metadata\n{\"files\": [\"apps/tommy/host/src/app/home/home.ts\", \"apps/tommy/host/src/app/home/home.html\", \"apps/tommy/host/src/app/home/home.css\", \"apps/tommy/host/src/app/home/home.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-host\", \"acceptanceCriteria\": [\".group-title per group, .card per experiment\", \"tags as .badge[data-variant]; .source href=sourceUrl target _blank rel noopener; Open link\", \"heading Tommy's Angular Lab; token-based styles\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 8: Final integration & verification",
+      "status": "pending",
+      "blockedBy": [11, 12],
+      "description": "**Goal:** Confirm the whole lab lints, tests, builds, and behaves correctly across themes and breakpoints.\n\n**Files:** none (verification only; commit any fixes the checks surface).\n\n**Acceptance Criteria:**\n- pnpm nx lint tommy-host clean\n- pnpm nx test tommy-host all suites green\n- pnpm nx build tommy-host green (AOT/strictTemplates)\n- manual: responsive 768px sidebar<->drawer; theme toggle persists no flash; experiment on light surface in dark mode; ⌘K open/filter/arrows/enter/esc; GitHub icons -> repo; card Source -> correct libs/tommy folder\n\n**Verify:** `pnpm nx lint tommy-host && pnpm nx test tommy-host && pnpm nx build tommy-host` exits 0, then manual smoke via `pnpm nx serve tommy-host`.\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"pnpm nx lint tommy-host && pnpm nx test tommy-host && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"lint clean\", \"all unit suites green\", \"AOT build green\", \"manual: responsive, theme persistence no-flash, dark-mode light surface, ⌘K, GitHub + Source links\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-06T14:35:00Z"
+}
