@@ -28,9 +28,15 @@ describe('SideNav', () => {
     const f = TestBed.createComponent(SideNav);
     f.detectChanges();
     const el = f.nativeElement as HTMLElement;
-    el.querySelector<HTMLButtonElement>('.group-heading')!.click();
+    const heading = el.querySelector<HTMLButtonElement>('.group-heading')!;
+    const groupName = groupExperiments()[0].name;
+    const groupSize = EXPERIMENTS.filter((e) => e.group === groupName).length;
+    heading.click();
     f.detectChanges();
-    expect(el.querySelectorAll('.nav-link').length).toBe(0);
+    // Collapsing the first group removes exactly that group's links.
+    expect(el.querySelectorAll('.nav-link').length).toBe(
+      EXPERIMENTS.length - groupSize,
+    );
   });
 
   it('emits navigate when a link is clicked', () => {

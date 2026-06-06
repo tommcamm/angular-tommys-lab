@@ -50,7 +50,7 @@ import { GithubIcon } from './github-icon';
       class="repo-link"
       [href]="repoUrl"
       target="_blank"
-      rel="noopener"
+      rel="noopener noreferrer"
       aria-label="View this project on GitHub"
     >
       <tommy-github-icon />
@@ -119,7 +119,8 @@ import { GithubIcon } from './github-icon';
   `,
 })
 export class SideNav {
-  /** Emitted on brand/link click so a parent drawer can close itself. */
+  /** Emitted when the brand or a nav-link is clicked; a parent drawer should close.
+   *  The external "Source on GitHub" link intentionally does NOT emit (new tab). */
   readonly navigate = output<void>();
 
   protected readonly groups = groupExperiments();
