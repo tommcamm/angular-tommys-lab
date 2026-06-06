@@ -59,4 +59,13 @@ describe('step components (smoke)', () => {
     expect(text).toContain('Username is required');
     expect(text).toContain('You must accept this to continue');
   });
+
+  it('keeps field errors hidden after a field is touched while showErrors is false', () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    // Marking a field touched (what a blur does) must NOT reveal errors while showErrors is false.
+    fixture.componentInstance.form.profile.firstName().markAsTouched();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.ui-error').length).toBe(0);
+  });
 });
