@@ -19,7 +19,7 @@
             "input": "apps/tommy/host/public"
           }
         ],
-        "styles": ["apps/tommy/host/src/styles.css", "libs/tommy/multi-step-form/src/lib/ui.css"]
+        "styles": ["apps/tommy/host/src/styles.css", "libs/tommy/multi-step-form/src/lib/ui/ui.css"]
       },
       "configurations": {
         "production": {

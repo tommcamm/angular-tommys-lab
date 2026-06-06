@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
-import type { TosItem } from '../flow-options';
-import type { TosAck } from '../flow-model';
-import { FieldError } from '../field-error';
+import type { TosItem } from '../model/flow-options';
+import type { TosAck } from '../model/flow-model';
+import { FieldError } from '../ui/field-error';
 
 @Component({
   selector: 'tommy-tos-step',
