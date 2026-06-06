@@ -30,4 +30,15 @@ describe('ErrorBanner', () => {
     expect(items.length).toBe(2);
     expect(items[0].textContent).toContain('First name is required');
   });
+
+  it('removes the alert when messages are cleared', () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.messages.set(['First name is required']);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role=alert]')).not.toBeNull();
+
+    fixture.componentInstance.messages.set([]);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role=alert]')).toBeNull();
+  });
 });
