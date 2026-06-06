@@ -116,6 +116,7 @@ export class MultiStepFlow {
     if (!ff) return;
     if (!this.currentStepValid()) { this.showErrors.set(true); return; }
     this.submitError.set(null);
+    this.confirmationId.set(null);
     this.phase.set('submitting');
 
     try {
