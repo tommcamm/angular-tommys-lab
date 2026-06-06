@@ -64,4 +64,27 @@ describe('CommandPalette', () => {
     ).onKeydown(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(f.componentInstance.open()).toBe(false);
   });
+
+  it('ArrowDown moves the active item, then Enter opens it', () => {
+    const f = make();
+    const router = TestBed.inject(Router);
+    const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const c = f.componentInstance as unknown as {
+      onKeydown: (e: KeyboardEvent) => void;
+    };
+    f.componentInstance.openPalette(); // empty query → all experiments, active = first
+    c.onKeydown(new KeyboardEvent('keydown', { key: 'ArrowDown' })); // → second
+    c.onKeydown(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(navSpy).toHaveBeenCalledWith(['multi-step-form']);
+    expect(f.componentInstance.open()).toBe(false);
+  });
+
+  it('toggle alternates the open state', () => {
+    const f = make();
+    expect(f.componentInstance.open()).toBe(false);
+    f.componentInstance.toggle();
+    expect(f.componentInstance.open()).toBe(true);
+    f.componentInstance.toggle();
+    expect(f.componentInstance.open()).toBe(false);
+  });
 });

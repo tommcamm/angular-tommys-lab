@@ -17,8 +17,7 @@ import { type Experiment, groupExperiments } from '../experiments';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (open()) {
-      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-      <div class="backdrop" (click)="close()"></div>
+      <button class="backdrop" type="button" aria-label="Close" (click)="close()"></button>
       <div class="palette" role="dialog" aria-modal="true" aria-label="Search experiments">
         <input
           #search
@@ -56,7 +55,12 @@ import { type Experiment, groupExperiments } from '../experiments';
     .backdrop {
       position: fixed;
       inset: 0;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 0;
       background: rgba(1, 4, 9, 0.55);
+      cursor: pointer;
       z-index: 40;
     }
     .palette {
@@ -123,6 +127,7 @@ export class CommandPalette {
   private readonly router = inject(Router);
   private readonly searchInput =
     viewChild<ElementRef<HTMLInputElement>>('search');
+  private trigger: HTMLElement | null = null;
 
   readonly open = signal(false);
   protected readonly query = signal('');
@@ -156,6 +161,7 @@ export class CommandPalette {
   });
 
   openPalette(): void {
+    this.trigger = document.activeElement as HTMLElement | null;
     this.query.set('');
     this.activeIndex.set(0);
     this.open.set(true);
@@ -164,6 +170,8 @@ export class CommandPalette {
 
   close(): void {
     this.open.set(false);
+    this.trigger?.focus();
+    this.trigger = null;
   }
 
   toggle(): void {
