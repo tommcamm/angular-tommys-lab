@@ -49,4 +49,17 @@ describe('FieldError', () => {
     fixture.detectChanges();
     expect(el.querySelector('.ui-error')).toBeNull();
   });
+
+  it('hides the error once the field is dirty, even while invalid and show is true', () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.show.set(true);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    // Pristine + invalid → visible.
+    expect(el.querySelector('span.ui-error')).not.toBeNull();
+    // User starts editing → dirty → error hides and stays hidden.
+    fixture.componentInstance.form.name().markAsDirty();
+    fixture.detectChanges();
+    expect(el.querySelector('.ui-error')).toBeNull();
+  });
 });

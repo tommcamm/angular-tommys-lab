@@ -17,7 +17,7 @@ import { TosStep } from './steps/tos-step';
 import { StepIndicator } from './ui/step-indicator';
 import { ErrorBanner } from './ui/error-banner';
 
-type Phase = 'intro' | 'loading' | 'form' | 'submitting' | 'done' | 'error';
+type Phase = 'intro' | 'form' | 'done';
 type StepKey = 'profile' | 'account' | 'tos';
 const STEPS: readonly StepKey[] = ['profile', 'account', 'tos'];
 
@@ -51,9 +51,23 @@ export class MultiStepFlow {
   protected readonly confirmationId = signal<string | null>(null);
   protected readonly loadError = signal<string | null>(null);
   protected readonly submitError = signal<string | null>(null);
-  protected readonly showErrors = signal(false);
+  protected readonly starting = signal(false);
+  protected readonly submitting = signal(false);
 
-  /** Display labels for the step indicator (parallel to STEPS). */
+  /**
+   * Per-step validation gate.
+   *  - `null`  → step not validated yet (no Next/Submit pressed here)
+   *  - `[]`    → validated and clean (banner cleared for this step)
+   *  - `[...]` → validated and invalid; a *frozen* snapshot of banner messages
+   * The banner reads this snapshot directly, so editing fields never changes it —
+   * only a Next/Submit press re-runs validateStep() and rewrites the entry.
+   */
+  protected readonly gate = signal<Record<StepKey, readonly string[] | null>>({
+    profile: null,
+    account: null,
+    tos: null,
+  });
+
   protected readonly stepLabels: readonly string[] = [
     'Profile',
     'Account',
@@ -65,8 +79,19 @@ export class MultiStepFlow {
     () => this.stepIndex() === STEPS.length - 1,
   );
 
-  /** The active step's field state. Returns the concrete FieldState per step so
-   *  we only ever read the common `valid` / `errorSummary` signals on the union. */
+  /** `true` once Next/Submit has been pressed on the current step. Drives the
+   *  inline field errors (which then self-hide once a field is edited). */
+  protected readonly attempted = computed(
+    () => this.gate()[this.currentStep()] !== null,
+  );
+
+  /** The frozen banner snapshot for the current step (empty = no banner). */
+  protected readonly bannerMessages = computed<readonly string[]>(
+    () => this.gate()[this.currentStep()] ?? [],
+  );
+
+  /** The active step's FieldState (concrete per step, so we read `valid`/
+   *  `errorSummary`/`reset` off a known node). */
   private readonly currentStepState = computed(() => {
     const ff = this.flowForm();
     if (!ff) return null;
@@ -80,69 +105,53 @@ export class MultiStepFlow {
     }
   });
 
-  /** Validity of just the active step's slice — gates "Next"/"Submit". */
-  protected readonly currentStepValid = computed((): boolean => {
-    const state = this.currentStepState();
-    return state ? state.valid() : false;
-  });
-
-  /** One message per invalid field on the active step — only after Next pressed.
-   *  `errorSummary()` aggregates the node's errors + all descendants'. Dedupe by
-   *  field (first message) so the list mirrors the inline messages exactly. */
-  protected readonly stepErrorMessages = computed<readonly string[]>(() => {
-    if (!this.showErrors()) return [];
-    const state = this.currentStepState();
-    if (!state) return [];
-    const seen = new Set<unknown>();
-    const messages: string[] = [];
-    for (const error of state.errorSummary()) {
-      if (seen.has(error.fieldTree)) continue;
-      seen.add(error.fieldTree);
-      if (error.message) messages.push(error.message);
-    }
-    return messages;
-  });
-
   async start(): Promise<void> {
-    this.phase.set('loading');
+    // Resume a form that was already built (e.g. after Back → intro): keep the
+    // user's data, no re-fetch, no spinner.
+    if (this.flowForm()) {
+      this.phase.set('form');
+      return;
+    }
+    this.starting.set(true);
     this.loadError.set(null);
     try {
       const opts = await this.flow.loadOptions();
       this.options.set(opts);
       this.flowForm.set(createFlowForm(opts, this.injector));
       this.stepIndex.set(0);
-      this.showErrors.set(false);
       this.phase.set('form');
     } catch {
       this.loadError.set('Could not start the sign-up flow. Please retry.');
-      this.phase.set('error');
+    } finally {
+      this.starting.set(false);
     }
   }
 
   next(): void {
-    if (!this.currentStepValid()) {
-      this.showErrors.set(true);
-      return;
-    }
-    this.showErrors.set(false);
+    // Navigating away dismisses any stale standalone submit error.
+    this.submitError.set(null);
+    if (!this.validateStep()) return;
     if (!this.isLast()) this.stepIndex.update((i) => i + 1);
   }
 
   back(): void {
-    this.showErrors.set(false);
-    if (!this.isFirst()) this.stepIndex.update((i) => i - 1);
+    // Navigating away dismisses any stale standalone submit error.
+    this.submitError.set(null);
+    if (this.isFirst()) {
+      // Back from the first step returns to the intro page (form preserved).
+      this.phase.set('intro');
+      return;
+    }
+    this.stepIndex.update((i) => i - 1);
   }
 
   async onSubmit(): Promise<void> {
     const ff = this.flowForm();
     if (!ff) return;
-    if (!this.currentStepValid()) {
-      this.showErrors.set(true);
-      return;
-    }
+    if (!this.validateStep()) return;
     this.submitError.set(null);
     this.confirmationId.set(null);
-    this.phase.set('submitting');
+    this.submitting.set(true);
 
     try {
       await submit(ff.form, {
@@ -163,16 +172,21 @@ export class MultiStepFlow {
       });
     } catch {
       this.submitError.set('An unexpected error occurred. Please try again.');
+    } finally {
+      this.submitting.set(false);
     }
 
     if (this.confirmationId()) {
       this.phase.set('done');
-    } else {
-      // Server rejected (or threw) — return to the account step with the error visible.
-      this.stepIndex.set(STEPS.indexOf('account'));
-      this.showErrors.set(true);
-      this.phase.set('form');
+      return;
     }
+    // Server rejected (or threw) — return to the account step with the error
+    // visible. Reset the subtree so the (untouched) username re-reveals its
+    // inline server error, and freeze the account banner from the live errors.
+    const accountState = ff.form.account();
+    accountState.reset();
+    this.setGate('account', this.snapshotMessages(accountState.errorSummary()));
+    this.stepIndex.set(STEPS.indexOf('account'));
   }
 
   reset(): void {
@@ -183,6 +197,46 @@ export class MultiStepFlow {
     this.confirmationId.set(null);
     this.loadError.set(null);
     this.submitError.set(null);
-    this.showErrors.set(false);
+    this.starting.set(false);
+    this.submitting.set(false);
+    this.gate.set({ profile: null, account: null, tos: null });
+  }
+
+  /**
+   * Validate the active step. On success, clears that step's banner and returns
+   * `true`. On failure, freezes the banner to the current error snapshot, resets
+   * the subtree's touched/dirty (so every still-invalid field re-reveals its
+   * inline error and edited-then-fixed fields stop showing), and returns `false`.
+   */
+  private validateStep(): boolean {
+    const state = this.currentStepState();
+    if (!state) return false;
+    const step = this.currentStep();
+    if (state.valid()) {
+      this.setGate(step, []);
+      return true;
+    }
+    this.setGate(step, this.snapshotMessages(state.errorSummary()));
+    state.reset();
+    return false;
+  }
+
+  /** One message per invalid field (dedupe by field, first message), mirroring
+   *  the inline messages. */
+  private snapshotMessages(
+    errors: readonly { readonly message?: string; readonly fieldTree: unknown }[],
+  ): readonly string[] {
+    const seen = new Set<unknown>();
+    const messages: string[] = [];
+    for (const error of errors) {
+      if (seen.has(error.fieldTree)) continue;
+      seen.add(error.fieldTree);
+      if (error.message) messages.push(error.message);
+    }
+    return messages;
+  }
+
+  private setGate(step: StepKey, value: readonly string[]): void {
+    this.gate.update((g) => ({ ...g, [step]: value }));
   }
 }

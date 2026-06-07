@@ -27,9 +27,14 @@ patterns you reach for in a real flow.
 ## Flow
 
 ```
-intro ─(Start)→ loading ─→ [ profile → account → tos ] ─(Submit)→ submitting ─→ done
-                                ▲ back / next, gated by per-step validity        └─(server error)→ account
+intro ─(Start ▸ spinner)→ [ profile → account → tos ] ─(Submit ▸ spinner)→ done
+  ▲ back from profile (form preserved)  │                                  └─(server error)→ account
+                                        ▲ back / next, per-step validity
 ```
+
+`Start` and `Submit` no longer swap to interstitial screens: the button greys out
+with an inline spinner and the view changes only once the work resolves (`starting`
+/ `submitting` booleans, not phases). The phase machine is just `intro | form | done`.
 
 ## File map
 
