@@ -97,9 +97,23 @@ export function createWizard(steps: readonly StepMeta[]): Wizard {
     gate.set(Object.fromEntries(steps.map((s) => [s.key, null])));
   };
 
+  /**
+   * Freeze a pre-computed set of banner messages onto a step's gate (e.g. for
+   * server-side errors surfaced after submit).
+   *
+   * Contract: the CALLER owns any `state.reset()` needed to re-reveal inline
+   * field errors and MUST perform it BEFORE invoking `freezeBanner`. The wizard
+   * receives already-computed messages and holds no `FieldState`, so it cannot
+   * reset a field it doesn't own. (The runner's server-error path relies on this.)
+   *
+   * Unknown keys are ignored: the gate is only written when the key exists in
+   * `steps` (`idx >= 0`), so a typo'd key fails safely rather than adding a
+   * phantom gate entry.
+   */
   const freezeBanner = (key: string, messages: readonly string[]): void => {
     const idx = steps.findIndex((s) => s.key === key);
-    if (idx >= 0) stepIndex.set(idx);
+    if (idx < 0) return;
+    stepIndex.set(idx);
     setGate(key, messages);
   };
 

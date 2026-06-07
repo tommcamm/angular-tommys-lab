@@ -81,4 +81,46 @@ describe('createWizard', () => {
     expect(w.bannerMessages()).toEqual(['That username is taken']);
     expect(w.attempted()).toBe(true);
   });
+
+  it('re-validation rewrites the gate (only a Next press re-runs validation)', () => {
+    const w = createWizard(STEPS);
+    w.phase.set('form');
+    const bad = w.next(
+      fakeState({ valid: false, errors: [{ message: 'X required', fieldTree: {} }] }),
+    );
+    expect(bad).toBe(false);
+    expect(w.stepIndex()).toBe(0);
+    expect(w.bannerMessages()).toEqual(['X required']);
+
+    // The gate stays dirty until the next press; a now-valid state flips it clean.
+    const ok = w.next(fakeState({ valid: true }));
+    expect(ok).toBe(true);
+    expect(w.stepIndex()).toBe(1);
+    // step 'a' is now clean (validated, no messages)
+    w.stepIndex.set(0);
+    expect(w.bannerMessages()).toEqual([]);
+    expect(w.attempted()).toBe(true);
+  });
+
+  it('next on the last step validates but does not advance', () => {
+    const w = createWizard(STEPS);
+    w.phase.set('form');
+    w.stepIndex.set(STEPS.length - 1);
+    expect(w.isLast()).toBe(true);
+    const ok = w.next(fakeState({ valid: true }));
+    expect(ok).toBe(true);
+    expect(w.stepIndex()).toBe(STEPS.length - 1);
+  });
+
+  it('reset() clears a dirtied gate back to unvalidated', () => {
+    const w = createWizard(STEPS);
+    w.phase.set('form');
+    w.freezeBanner('a', ['That username is taken']);
+    expect(w.attempted()).toBe(true);
+
+    w.reset();
+    expect(w.phase()).toBe('intro');
+    expect(w.stepIndex()).toBe(0);
+    expect(w.attempted()).toBe(false);
+  });
 });
