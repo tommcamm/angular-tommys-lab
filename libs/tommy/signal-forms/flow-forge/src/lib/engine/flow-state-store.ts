@@ -7,12 +7,17 @@ export interface FlowSnapshot {
   readonly schemaVersion: number;
   readonly state: string;
   readonly challengeId: string;
+  /** Must be plain JSON-serializable (no Date/Map/undefined/cyclic refs); see class JSDoc. */
   readonly model: unknown;
 }
 
 /**
  * Versioned, single-use sessionStorage snapshot for the MitID round-trip. The full
  * page unloads on redirect, so the model must survive here and be restored on boot.
+ *
+ * Caveat: the snapshot is JSON round-tripped through sessionStorage, so `model` must be plain
+ * JSON-serializable (no Date/Map/undefined/cyclic refs); a flow whose model isn't JSON-safe
+ * should provide `FlowDef.snapshot()`/`restore()` hooks.
  */
 @Injectable({ providedIn: 'root' })
 export class FlowStateStore {
