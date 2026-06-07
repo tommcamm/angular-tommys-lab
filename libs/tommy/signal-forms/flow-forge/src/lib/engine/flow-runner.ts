@@ -51,7 +51,7 @@ export class FlowRunner implements OnInit {
     // injector lets afterNextRender run from inside the effect callback.
     effect(() => {
       this.wizard().stepIndex(); // track step changes
-      if (this.wizard().phase() !== 'form') return;
+      if (this.resuming() || this.wizard().phase() !== 'form') return;
       afterNextRender(() => this.stepRegion()?.nativeElement.focus(), { injector: this.injector });
     });
   }
@@ -275,6 +275,7 @@ export class FlowRunner implements OnInit {
     this.submitError.set(null);
     this.starting.set(false);
     this.submitting.set(false);
+    this.resuming.set(false);
     this.wizard().reset();
   }
 }
