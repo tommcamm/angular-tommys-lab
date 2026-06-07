@@ -151,15 +151,22 @@ export class FlowRunner {
       this.submitting.set(false);
     }
 
-    if (this.confirmationId()) {
+    // Branch on the single settled outcome (not `confirmationId()`, which is set
+    // inside the action only so the template can display it). 'signing_required'
+    // already redirected in the action, so it does nothing here.
+    const settledOutcome = settled.outcome;
+    if (settledOutcome?.status === 'ok') {
       this.wizard().phase.set('done');
       return;
     }
-    if (settled.outcome?.status === 'rejected') {
-      this.placeRejection(settled.outcome.errors, ff);
+    if (settledOutcome?.status === 'rejected') {
+      this.placeRejection(settledOutcome.errors, ff);
     }
   }
 
+  // When a flow provides no `mapServerError`, server errors attach to the ROOT
+  // form node and surface only via the banner (no inline field error) — the
+  // intended default.
   private toServerError(e: ServerFieldError, form: FieldTree<unknown>) {
     const mapped = this.def().mapServerError?.(e, form);
     return {
@@ -180,7 +187,8 @@ export class FlowRunner {
     const stepKey = mapped?.stepKey ?? def.steps[0].key;
     const node = (mapped?.fieldTree ?? ff.form) as FieldTree<unknown>;
     node().reset();
-    this.wizard().freezeBanner(stepKey, errors.map((e) => e.message));
+    // Dedup identical messages so duplicate server errors don't render twice.
+    this.wizard().freezeBanner(stepKey, [...new Set(errors.map((e) => e.message))]);
   }
 
   /** 202 branch: snapshot (with a state nonce) then leave the SPA. */
