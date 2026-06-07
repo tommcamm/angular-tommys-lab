@@ -128,11 +128,15 @@ export class MultiStepFlow {
   }
 
   next(): void {
+    // Navigating away dismisses any stale standalone submit error.
+    this.submitError.set(null);
     if (!this.validateStep()) return;
     if (!this.isLast()) this.stepIndex.update((i) => i + 1);
   }
 
   back(): void {
+    // Navigating away dismisses any stale standalone submit error.
+    this.submitError.set(null);
     if (this.isFirst()) {
       // Back from the first step returns to the intro page (form preserved).
       this.phase.set('intro');

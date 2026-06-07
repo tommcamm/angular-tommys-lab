@@ -328,4 +328,24 @@ describe('MultiStepFlow', () => {
     fixture.detectChanges();
     expect(el.textContent).toContain('All set');
   });
+
+  it('dismisses the standalone submit error after navigating away and back to account', async () => {
+    stub.submitFlow = () => Promise.reject(new Error('network down'));
+    const fixture = await startFlow();
+    await fillThroughTos(fixture, 'tommy123');
+
+    clickButton(fixture, 'Submit');
+    await fixture.whenStable();
+    await Promise.resolve();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('An unexpected error occurred'); // on account
+
+    clickButton(fixture, 'Back'); // account → profile (clears the stale error)
+    clickButton(fixture, 'Next'); // profile is valid → returns to account
+    expect(el.textContent).toContain('Username'); // back on the account step
+    expect(el.textContent).not.toContain('An unexpected error occurred');
+  });
 });
