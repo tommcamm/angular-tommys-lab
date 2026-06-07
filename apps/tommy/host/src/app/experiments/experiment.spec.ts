@@ -17,6 +17,7 @@ describe('experiments registry', () => {
     expect(groups[0].experiments.map((e) => e.slug)).toEqual([
       'signal-forms',
       'multi-step-form',
+      'flow-forge',
     ]);
   });
 
