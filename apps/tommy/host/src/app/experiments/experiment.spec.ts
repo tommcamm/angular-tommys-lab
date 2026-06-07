@@ -1,4 +1,6 @@
-import { EXPERIMENTS, REPO_URL, groupExperiments, sourceUrl, tagVariant, type Experiment } from './experiments';
+import type { Experiment } from './experiment.model';
+import { EXPERIMENTS, REPO_URL } from './registry';
+import { groupExperiments, sourceUrl, tagVariant } from './experiment.utils';
 
 describe('experiments registry', () => {
   it('renames and regroups both form experiments', () => {

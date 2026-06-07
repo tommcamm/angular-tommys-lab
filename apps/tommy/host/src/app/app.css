@@ -33,8 +33,15 @@
 
 /* Experiment routes: a forced-light "surface" so each experiment's own
    light-background CSS keeps working unchanged in either theme.
-   These overrides must match the :root light tokens in styles.css. */
+   These overrides must match the :root light tokens in styles.css.
+
+   `color-scheme: light` is load-bearing: the dark root sets `color-scheme: dark`,
+   which inherits down and makes the browser paint native form controls (text
+   inputs, number spinners, selects) with its dark UA styling. Resetting it here
+   keeps those controls light to match the white surface — otherwise the fields
+   render dark on a white card. */
 .main.surface-host {
+  color-scheme: light;
   --bg: #f6f8fa;
   --surface: #ffffff;
   --surface-2: #f6f8fa;
