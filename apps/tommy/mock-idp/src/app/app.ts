@@ -98,20 +98,18 @@ export class App {
 
   approve(): void {
     if (!this.returnAllowed()) return;
-    const code = crypto.randomUUID();
-    this.redirect.go(
-      `${this.returnUrl}&status=approved&state=${encodeURIComponent(
-        this.state,
-      )}&code=${encodeURIComponent(code)}`,
-    );
+    const u = new URL(this.returnUrl);
+    u.searchParams.set('status', 'approved');
+    u.searchParams.set('state', this.state);
+    u.searchParams.set('code', crypto.randomUUID());
+    this.redirect.go(u.toString());
   }
 
   cancel(): void {
     if (!this.returnAllowed()) return;
-    this.redirect.go(
-      `${this.returnUrl}&status=cancelled&state=${encodeURIComponent(
-        this.state,
-      )}`,
-    );
+    const u = new URL(this.returnUrl);
+    u.searchParams.set('status', 'cancelled');
+    u.searchParams.set('state', this.state);
+    this.redirect.go(u.toString());
   }
 }
