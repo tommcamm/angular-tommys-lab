@@ -1,0 +1,77 @@
+{
+  "name": "tommy-mock-idp",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "tommy",
+  "sourceRoot": "apps/tommy/mock-idp/src",
+  "tags": ["scope:tommy", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/tommy/mock-idp",
+        "browser": "apps/tommy/mock-idp/src/main.ts",
+        "tsConfig": "apps/tommy/mock-idp/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/tommy/mock-idp/public"
+          }
+        ],
+        "styles": ["apps/tommy/mock-idp/src/styles.css"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "port": 4300
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "tommy-mock-idp:build:production"
+        },
+        "development": {
+          "buildTarget": "tommy-mock-idp:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "tommy-mock-idp:build",
+        "staticFilePath": "dist/apps/tommy/mock-idp/browser",
+        "spa": true
+      }
+    }
+  }
+}
