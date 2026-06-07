@@ -1,3 +1,9 @@
+@if (resuming()) {
+<tommy-flow-shell>
+  <h2 class="ui-title">Completing your MitID signing…</h2>
+  <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Verifying your signature.</p>
+</tommy-flow-shell>
+} @else {
 <tommy-flow-shell>
   @let w = wizard();
   @switch (w.phase()) {
@@ -25,7 +31,9 @@
   <tommy-step-indicator [labels]="w.labels" [activeIndex]="w.stepIndex()" />
   <tommy-error-banner [messages]="w.bannerMessages()" />
 
-  <ng-container [ngComponentOutlet]="currentStepDef().component" [ngComponentOutletInputs]="stepInputs()" />
+  <div #stepRegion tabindex="-1" class="ui-stack">
+    <ng-container [ngComponentOutlet]="currentStepDef().component" [ngComponentOutletInputs]="stepInputs()" />
+  </div>
 
   @if (submitError()) {
   <p class="ui-error">{{ submitError() }}</p>
@@ -45,3 +53,4 @@
   </div>
   } } }
 </tommy-flow-shell>
+}

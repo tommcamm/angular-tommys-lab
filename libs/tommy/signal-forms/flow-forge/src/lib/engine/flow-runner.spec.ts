@@ -5,6 +5,7 @@ import { FlowBackend, FLOW_FIXTURES, type FlowFixture } from './flow-backend';
 import { ExternalRedirect } from './external-redirect';
 import { FlowStateStore } from './flow-state-store';
 import { testFlow } from './testing/test-flow';
+import type { ResumeData } from './resume';
 
 const fixtures = new Map<string, FlowFixture>([
   [
@@ -247,5 +248,38 @@ describe('FlowRunner — submit', () => {
     const alert = el.querySelector('[role=alert]');
     expect(alert?.textContent).toContain('Name taken');
     expect(el.textContent).not.toContain('All set');
+  });
+});
+
+// ---- Resume after MitID ------------------------------------------------------------
+
+async function setupResume(resume: ResumeData) {
+  const submit = (_p: unknown, signature?: { code: string }) =>
+    signature
+      ? { status: 'ok', httpStatus: 200, confirmationId: 'SIGNED-1' }
+      : { status: 'signing_required', httpStatus: 202, signingUrl: 'https://idp/x', challengeId: 'c' };
+  TestBed.configureTestingModule({
+    imports: [FlowRunner],
+    providers: [FlowBackend, FlowStateStore, { provide: FLOW_FIXTURES, useValue: new Map([['test', { features: {}, terms: {}, submit }]]) }],
+  });
+  const fixture = TestBed.createComponent(FlowRunner);
+  fixture.componentRef.setInput('def', testFlow);
+  fixture.componentRef.setInput('resume', resume);
+  fixture.detectChanges();
+  return fixture;
+}
+
+describe('FlowRunner — resume after MitID', () => {
+  it('rebuilds the form, re-submits with the signature, and lands on done', async () => {
+    const fixture = await setupResume({
+      model: { one: { name: 'Tom' }, two: { city: 'CPH' } },
+      signature: { challengeId: 'c', code: 'otc-1' },
+    });
+    await new Promise((r) => setTimeout(r, 1300)); // loadOptions(500) + submit(500) real delays
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('All set');
+    expect(el.textContent).toContain('SIGNED-1');
   });
 });
