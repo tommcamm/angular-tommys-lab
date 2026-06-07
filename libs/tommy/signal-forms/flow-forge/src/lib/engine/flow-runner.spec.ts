@@ -85,6 +85,23 @@ describe('FlowRunner — rendering & load', () => {
     expect(el.querySelector('#t-city')).toBeNull();
   });
 
+  it('Next stays on step one when the first step is invalid (empty)', async () => {
+    const fixture = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    await start(fixture);
+
+    // Leave #t-name EMPTY, then click Next: the runner must respect the gate.
+    const next = Array.from(el.querySelectorAll('button')).find(
+      (b) => (b.textContent ?? '').trim() === 'Next',
+    );
+    if (!next) throw new Error('button not found: Next');
+    next.click();
+    fixture.detectChanges();
+
+    expect(el.querySelector('#t-name')).not.toBeNull();
+    expect(el.querySelector('#t-city')).toBeNull();
+  });
+
   it('renders the step indicator and error banner host within the form phase', async () => {
     const fixture = await setup();
     const el = fixture.nativeElement as HTMLElement;

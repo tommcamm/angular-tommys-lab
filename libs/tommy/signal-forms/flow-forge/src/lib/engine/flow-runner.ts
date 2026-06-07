@@ -10,6 +10,8 @@ import { FlowShell } from '../ui/flow-shell';
 import { StepIndicator } from '../ui/step-indicator';
 import { ErrorBanner } from '../ui/error-banner';
 
+declare const ngDevMode: boolean | undefined;
+
 @Component({
   selector: 'tommy-flow-runner',
   imports: [NgComponentOutlet, FlowShell, StepIndicator, ErrorBanner],
@@ -74,6 +76,7 @@ export class FlowRunner {
 
   async start(): Promise<void> {
     if (this.flowForm()) {
+      // Resume an already-loaded flow (e.g. after Back from step 0 to intro) — keep data, no re-fetch.
       this.wizard().phase.set('form');
       return;
     }
@@ -85,7 +88,8 @@ export class FlowRunner {
       this.flowForm.set(this.def().buildForm(env, this.injector));
       this.wizard().stepIndex.set(0);
       this.wizard().phase.set('form');
-    } catch {
+    } catch (e) {
+      if (typeof ngDevMode !== 'undefined' && ngDevMode) console.error('[flow-forge] flow load failed', e);
       this.loadError.set('Could not start this flow. Please retry.');
     } finally {
       this.starting.set(false);
