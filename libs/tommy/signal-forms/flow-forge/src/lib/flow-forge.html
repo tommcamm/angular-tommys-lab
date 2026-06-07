@@ -1,0 +1,26 @@
+@if (selected(); as def) {
+  @if (returnNotice(); as notice) {
+    <p class="ui-banner-warning" role="status">{{ notice }}</p>
+  }
+  <button type="button" class="ui-btn ui-foot" (click)="clear()">← All flows</button>
+  <tommy-flow-runner [def]="def" />
+} @else {
+  <header class="ui-stack">
+    <h2 class="ui-title">Flow Forge</h2>
+    <p class="ui-muted">
+      One engine, many flows. Pick a flow to run it. Each stresses a different
+      dimension of the abstraction.
+    </p>
+  </header>
+  <ul class="ui-gallery">
+    @for (flow of flows; track flow.meta.slug) {
+      <li>
+        <button type="button" class="ui-flow-card" [attr.data-flow]="flow.meta.slug" (click)="select(flow)">
+          <span class="ui-badge" [class]="badgeClass(flow.meta.dimension)">{{ flow.meta.dimension }}</span>
+          <strong class="ui-title">{{ flow.meta.title }}</strong>
+          <span class="ui-muted">{{ flow.meta.blurb }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+}

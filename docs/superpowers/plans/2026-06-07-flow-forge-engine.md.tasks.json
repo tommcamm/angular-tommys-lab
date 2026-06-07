@@ -1,0 +1,82 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-07-flow-forge-engine.md",
+  "lastUpdated": "2026-06-07",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Scaffold flow-forge lib + host registration",
+      "status": "pending",
+      "description": "**Goal:** New Nx lib `tommy-signal-forms-flow-forge` exporting a placeholder `FlowForge`, lazy-loaded at `/flow-forge`, building cleanly.\n\n**Files:** generate lib; create `src/lib/flow-forge.ts`; modify `src/index.ts`, `tsconfig.base.json`, `apps/tommy/host/src/app/experiments/registry.ts`.\n\n**Verify:** `pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge\", \"tsconfig.base.json\", \"apps/tommy/host/src/app/experiments/registry.ts\"], \"verifyCommand\": \"pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"host build succeeds\", \"/flow-forge lazy-loads FlowForge\", \"project.json mirrors multi-step-form\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Port .ui-* UI layer + flow-shell + CDK",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Shared `.ui-*` layer in the lib, `@angular/cdk` installed, host renders the lib `ui.css`.\n\n**Files:** `src/lib/ui/{ui.css,field-error.ts,error-banner.ts,step-indicator.ts,flow-shell.ts,*.spec.ts}`; modify `apps/tommy/host/project.json`, `apps/tommy/host/src/styles.css`, `package.json`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/ui\", \"apps/tommy/host/project.json\", \"apps/tommy/host/src/styles.css\", \"package.json\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"@angular/cdk@21.2.x added\", \"ui.css in host build styles\", \"ported ui specs pass\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Engine contract types + schema helpers",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** `flow-def.ts` contract + `schema-helpers.ts` (applyFeature), unit-tested.\n\n**Files:** `src/lib/engine/{flow-def.ts,schema-helpers.ts,schema-helpers.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-def.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/schema-helpers.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/schema-helpers.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"defineStep compile-time slice match\", \"applyFeature requires iff mandatory\", \"FlowEnvelope defaults to FeatureMap\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: createWizard() headless controller",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Pure-signals wizard controller (phase/step/gate, frozen-snapshot), DOM-free tests; ported from multi-step-flow.ts:55-241.\n\n**Files:** `src/lib/engine/{wizard.ts,wizard.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/wizard.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/wizard.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"valid advances/clears, invalid freezes+resets+no-advance\", \"back from first -> intro\", \"attempted only after validate\", \"freezeBanner navigates+sets banner\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: MitID plumbing (redirect, state store, mitid)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** ExternalRedirect seam, versioned single-use FlowStateStore, mitid url/callback contract; tested without navigation.\n\n**Files:** `src/lib/engine/{external-redirect.ts,flow-state-store.ts,mitid.ts,flow-state-store.spec.ts,mitid.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/external-redirect.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-state-store.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/mitid.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-state-store.spec.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/mitid.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"round-trip + single-use\", \"null on version mismatch/absent\", \"same-origin built/foreign rejected\", \"parseCallback extracts fields\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: FlowBackend service + fixtures registry",
+      "status": "pending",
+      "blockedBy": [3],
+      "description": "**Goal:** One injectable FlowBackend (GET options/POST submit by slug) reading FLOW_FIXTURES; synthetic fixture exercises 200/202/422.\n\n**Files:** `src/lib/engine/{flow-backend.ts,flow-backend.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-backend.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-backend.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"loadOptions resolves features/terms\", \"submit returns outcome; signature flips 202->200\", \"unknown slug rejects\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: flow-runner rendering + load",
+      "status": "pending",
+      "blockedBy": [2, 4, 6],
+      "description": "**Goal:** Engine component renders intro/done + active step (NgComponentOutlet fixed input set) + loads options. Submit in Task 8.\n\n**Files:** `src/lib/engine/{flow-runner.ts,flow-runner.html,flow-runner.spec.ts,testing/test-flow.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.html\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.spec.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/testing/test-flow.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"intro renders + Start loads step 0\", \"step gets field/showErrors/data\", \"next/back nav + indicator/banner render\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 8: flow-runner submit (200/422/202)",
+      "status": "pending",
+      "blockedBy": [5, 7],
+      "description": "**Goal:** onSubmit() via signal-forms submit(): 200->done, 422->mapped errors+navigate, 202->snapshot(state nonce)+redirect seam. Adapt multi-step-flow.ts:148-190.\n\n**Files:** modify `src/lib/engine/{flow-runner.ts,flow-runner.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"ok->done+confirmation\", \"422->banner message+navigate\", \"202->snapshot+redirect same-origin with state\", \"AOT build passes\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 9: Newsletter flow (minimal) + shared TOS step",
+      "status": "pending",
+      "blockedBy": [2, 6],
+      "description": "**Goal:** Minimal flow (contact+prefs+tos) proving low per-flow cost + shared tos-step.\n\n**Files:** `src/lib/steps/tos-step.ts`; `src/lib/flows/newsletter/{model.ts,schema.ts,fixtures.ts,steps/contact-step.ts,steps/prefs-step.ts,def.ts,schema.spec.ts}`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/steps/tos-step.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/flows/newsletter\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge\", \"acceptanceCriteria\": [\"schema requires name/email + required terms\", \"emptyModel bridges terms map->array\", \"newsletterFlow complete FlowDef 3 steps\"]}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 10: FlowForge launcher (gallery + callback)",
+      "status": "pending",
+      "blockedBy": [8, 9],
+      "description": "**Goal:** Launcher: gallery, mounts <flow-runner>, provides FLOW_FIXTURES, handles MitID callback (restore/cancel) on boot.\n\n**Files:** `src/lib/flow-registry.ts`; modify `src/lib/flow-forge.ts` (+`flow-forge.html`), `src/lib/ui/ui.css`; test `src/lib/flow-forge.spec.ts`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/flow-registry.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.html\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.spec.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/ui/ui.css\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"gallery cards + select mounts runner\", \"FLOW_FIXTURES provided\", \"cancelled callback restores+notice; bad state ignored\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 11: Docs + full local CI",
+      "status": "pending",
+      "blockedBy": [10],
+      "description": "**Goal:** Lib README + root README row + green full suite.\n\n**Files:** `libs/tommy/signal-forms/flow-forge/README.md`; modify `README.md`.\n\n**Verify:** `pnpm check`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/README.md\", \"README.md\"], \"verifyCommand\": \"pnpm check\", \"acceptanceCriteria\": [\"lib README covers split/contract/how-to-add\", \"root README has Flow Forge row\", \"pnpm check passes\"]}\n```"
+    }
+  ]
+}

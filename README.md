@@ -10,6 +10,7 @@ A personal Angular workspace for building focused experiments with new framework
 | --- | --- |
 | Simple Form | A standalone sign-up form covering signal-backed models, validation, field state, and submission. |
 | Multi-Step Form | A signup wizard covering composed schemas, backend-driven constraints, dynamic arrays, deferred validation, and server errors. |
+| Flow Forge | A composable engine for signal-forms multi-step flows: one skeleton powers many flows (minimal, complex fields, MitID signing). |
 
 ## Stack
 
@@ -66,6 +67,7 @@ libs/
   tommy/signal-forms/
     simple-form/               Single-page signal forms experiment
     multi-step-form/           Multi-step signal forms experiment
+    flow-forge/                Composable engine for multi-step flows
 docs/superpowers/             Design notes and implementation plans
 ```
 

@@ -19,6 +19,9 @@
       ],
       "@tommy/signal-forms/multi-step-form": [
         "./libs/tommy/signal-forms/multi-step-form/src/index.ts"
+      ],
+      "@tommy/signal-forms/flow-forge": [
+        "./libs/tommy/signal-forms/flow-forge/src/index.ts"
       ]
     }
   },

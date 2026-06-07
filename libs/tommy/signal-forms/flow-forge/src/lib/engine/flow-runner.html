@@ -1,0 +1,47 @@
+<tommy-flow-shell>
+  @let w = wizard();
+  @switch (w.phase()) {
+
+  @case ('intro') {
+  <h2 class="ui-title">{{ def().meta.title }}</h2>
+  <p class="ui-muted">{{ def().meta.intro }}</p>
+  @if (loadError()) {
+  <p class="ui-error">{{ loadError() }}</p>
+  }
+  <button type="button" class="ui-btn ui-btn-primary ui-foot" [disabled]="starting()" [attr.aria-busy]="starting()" (click)="start()">
+    @if (starting()) {
+    <span class="ui-spinner" aria-hidden="true"></span> Starting…
+    } @else { Start }
+  </button>
+  }
+
+  @case ('done') {
+  <h2 class="ui-title"><span aria-hidden="true">🎉</span> All set!</h2>
+  <p>Your confirmation id is <strong>{{ confirmationId() }}</strong>.</p>
+  <button type="button" class="ui-btn ui-foot" (click)="reset()">Start over</button>
+  }
+
+  @case ('form') { @if (flowForm()) {
+  <tommy-step-indicator [labels]="w.labels" [activeIndex]="w.stepIndex()" />
+  <tommy-error-banner [messages]="w.bannerMessages()" />
+
+  <ng-container [ngComponentOutlet]="currentStepDef().component" [ngComponentOutletInputs]="stepInputs()" />
+
+  @if (submitError()) {
+  <p class="ui-error">{{ submitError() }}</p>
+  }
+
+  <div class="ui-row ui-foot">
+    <button type="button" class="ui-btn" (click)="back()">Back</button>
+    @if (w.isLast()) {
+    <button type="button" class="ui-btn ui-btn-primary" [disabled]="submitting()" [attr.aria-busy]="submitting()" (click)="onSubmit()">
+      @if (submitting()) {
+      <span class="ui-spinner" aria-hidden="true"></span> Submitting…
+      } @else { Submit }
+    </button>
+    } @else {
+    <button type="button" class="ui-btn ui-btn-primary" (click)="next()">Next</button>
+    }
+  </div>
+  } } }
+</tommy-flow-shell>

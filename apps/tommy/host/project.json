@@ -21,7 +21,8 @@
         ],
         "styles": [
           "apps/tommy/host/src/styles.css",
-          "libs/tommy/signal-forms/multi-step-form/src/lib/ui/ui.css"
+          "libs/tommy/signal-forms/multi-step-form/src/lib/ui/ui.css",
+          "libs/tommy/signal-forms/flow-forge/src/lib/ui/ui.css"
         ]
       },
       "configurations": {

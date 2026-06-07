@@ -33,4 +33,15 @@ export const EXPERIMENTS: readonly Experiment[] = [
         (m) => m.MultiStepFlow,
       ),
   },
+  {
+    slug: 'flow-forge',
+    title: 'Flow Forge',
+    description:
+      'A composable engine for signal-forms multi-step flows: one skeleton, many flows (minimal, complex fields, MitID signing).',
+    group: 'Signal Forms',
+    tags: ['signals', 'multi-step', 'experimental'],
+    sourcePath: 'libs/tommy/signal-forms/flow-forge',
+    load: () =>
+      import('@tommy/signal-forms/flow-forge').then((m) => m.FlowForge),
+  },
 ];

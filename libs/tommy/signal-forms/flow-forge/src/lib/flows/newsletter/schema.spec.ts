@@ -1,0 +1,38 @@
+import { TestBed } from '@angular/core/testing';
+import { Injector } from '@angular/core';
+import { newsletterFlow } from './def';
+import type { FlowEnvelope } from '../../engine/flow-def';
+
+const env: FlowEnvelope = {
+  features: { NAME: { mandatory: true }, EMAIL: { mandatory: true } },
+  terms: {
+    privacy: { title: 'Privacy', body: 'b', required: true },
+    marketing: { title: 'Marketing', body: 'b', required: false },
+  },
+};
+
+function build() {
+  const injector = TestBed.inject(Injector);
+  return newsletterFlow.buildForm(env, injector);
+}
+
+describe('newsletter schema', () => {
+  it('requires name and a valid email', () => {
+    const { form } = build();
+    expect(form.contact.name().valid()).toBe(false);
+    form.contact.email().value.set('not-an-email');
+    expect(form.contact.email().valid()).toBe(false);
+    form.contact.name().value.set('Tom');
+    form.contact.email().value.set('tom@example.com');
+    expect(form.contact.name().valid()).toBe(true);
+    expect(form.contact.email().valid()).toBe(true);
+  });
+
+  it('requires accepting the required term only', () => {
+    const { form } = build();
+    // privacy (required) unaccepted → tos invalid; marketing optional → fine
+    expect(form.tos().valid()).toBe(false);
+    form.tos[0]().value.update((v) => ({ ...v, accepted: true })); // privacy
+    expect(form.tos().valid()).toBe(true);
+  });
+});
