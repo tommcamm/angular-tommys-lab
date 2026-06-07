@@ -58,11 +58,27 @@ pnpm exec nx build tommy-host
 pnpm exec nx graph
 ```
 
+### Running the Flow Forge bank flow (MitID)
+
+The Flow Forge bank experiment signs with MitID by redirecting to a mock provider
+app. Serve **both** the host and the mock provider:
+
+```bash
+pnpm nx serve tommy-host        # http://localhost:4200
+pnpm nx serve tommy-mock-idp    # http://localhost:4300  (MitID provider — needed for the bank flow)
+```
+
+The bank flow's MitID signing redirects to the `mock-idp` origin
+(`http://localhost:4300`). In production it needs a deployed provider origin
+(configured in `libs/tommy/signal-forms/flow-forge/src/lib/engine/mitid.ts` as
+`MOCK_IDP_ORIGIN`) — absent one, the bank flow is dev-only.
+
 ## Repository Layout
 
 ```text
 apps/
   tommy/host/                 Angular host and experiment navigation
+  tommy/mock-idp/             Mock MitID provider for the Flow Forge bank flow
 libs/
   tommy/signal-forms/
     simple-form/               Single-page signal forms experiment
