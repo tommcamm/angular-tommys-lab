@@ -5,6 +5,7 @@ import { FlowRunner } from './engine/flow-runner';
 import { FLOW_FIXTURES, FlowBackend } from './engine/flow-backend';
 import { FlowStateStore } from './engine/flow-state-store';
 import { parseCallback } from './engine/mitid';
+import type { ResumeData } from './engine/resume';
 import { FIXTURES, FLOWS } from './flow-registry';
 
 @Component({
@@ -25,15 +26,17 @@ export class FlowForge {
   protected readonly flows = FLOWS;
   protected readonly selected = signal<AnyFlowDef | null>(null);
   protected readonly returnNotice = signal<string | null>(null);
+  protected readonly resumeData = signal<ResumeData | null>(null);
 
   constructor() {
     this.handleCallback();
   }
 
   /**
-   * MitID callback handling on boot. The full approved → rehydrate → re-submit
-   * round-trip is Plan 2 (the bank flow). Here we validate the correlation `state`
-   * against the single-use snapshot and, on a match, open the flow (+ a notice).
+   * MitID callback handling on boot. Validates the correlation `state` against the
+   * single-use snapshot and, on a match, opens the flow. On `approved`, it builds a
+   * `ResumeData` (snapshot model + the one-time `code`) and hands it to the runner so
+   * the flow completes; on `cancelled`, it shows a review/resubmit notice (no resume).
    */
   private handleCallback(): void {
     const cb = parseCallback(this.route.snapshot.queryParamMap);
@@ -43,15 +46,19 @@ export class FlowForge {
     const snap = this.store.restore(def.meta.slug, def.schemaVersion); // single-use
     if (!snap || !cb.state || snap.state !== cb.state) return; // correlation/replay check
     this.selected.set(def);
-    this.returnNotice.set(
-      cb.status === 'cancelled'
-        ? 'Signing cancelled — you can review and resubmit.'
-        : 'Returned from MitID signing.',
-    );
+    if (cb.status === 'approved' && cb.code) {
+      this.resumeData.set({
+        model: snap.model,
+        signature: { challengeId: snap.challengeId, code: cb.code },
+      });
+    } else {
+      this.returnNotice.set('Signing cancelled — you can review and resubmit.');
+    }
   }
 
   select(def: AnyFlowDef): void {
     this.returnNotice.set(null);
+    this.resumeData.set(null);
     this.selected.set(def);
   }
 
