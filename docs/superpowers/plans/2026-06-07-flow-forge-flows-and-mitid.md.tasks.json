@@ -1,0 +1,45 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-07-flow-forge-flows-and-mitid.md",
+  "lastUpdated": "2026-06-07T17:30:00Z",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "P2 Task 1: Engine — runner resume + optional-signature submit + focus",
+      "status": "pending",
+      "description": "**Goal:** `<flow-runner>` resumes a flow from a persisted snapshot, completes the MitID submission, and focuses the step container on step change. No FlowDef contract change.\n\n**Files:** create `src/lib/engine/resume.ts`; modify `flow-runner.ts`, `flow-runner.html`, `flow-runner.spec.ts`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/resume.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.html\", \"libs/tommy/signal-forms/flow-forge/src/lib/engine/flow-runner.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"resume rebuilds+resubmits with signature -> done\", \"resuming view shown in flight\", \"onSubmit(signature?) backward-compatible\", \"focus-on-step-change via afterNextRender\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "P2 Task 2: Launcher — approved callback rehydrates + resumes",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** On an approved MitID callback with a matching state, the launcher hands the runner a resume payload so the flow completes; cancelled/mismatch unchanged.\n\n**Files:** modify `src/lib/flow-forge.ts`, `flow-forge.html`, `flow-forge.spec.ts`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.html\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-forge.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"approved+match -> resume payload passed\", \"cancelled -> notice, no resume\", \"mismatch/absent -> ignored\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "P2 Task 3: mock-idp provider app",
+      "status": "pending",
+      "description": "**Goal:** Standalone Nx Angular app on its own origin (dev port 4300) playing the MitID provider: reads challenge/state/return, Approve/Cancel, validates return origin, redirects back with status + echoed state + one-time code.\n\n**Files:** create `apps/tommy/mock-idp/**` (generator), `app/redirect.ts`; modify `app/app.ts` + serve port 4300; test `app/app.spec.ts`.\n\n**Verify:** `pnpm nx test tommy-mock-idp && pnpm nx build tommy-mock-idp`\n\n```json:metadata\n{\"files\": [\"apps/tommy/mock-idp\"], \"verifyCommand\": \"pnpm nx test tommy-mock-idp && pnpm nx build tommy-mock-idp\", \"acceptanceCriteria\": [\"serves on 4300\", \"approve appends status/state/code if origin allowed\", \"cancel appends status/state\", \"foreign return origin rejected\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "P2 Task 4: Bank flow (MitID 202 signing)",
+      "status": "pending",
+      "blockedBy": [1, 3],
+      "description": "**Goal:** A flow whose backend demands MitID signing — fixture returns 202 (pointing at mock-idp) when unsigned and 200 once signed.\n\n**Files:** modify `src/lib/engine/mitid.ts` (+MOCK_IDP_ORIGIN); create `src/lib/flows/bank/{model,schema,fixtures,steps/applicant-step,steps/account-type-step,def}.ts` + specs; modify `flow-registry.ts`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/engine/mitid.ts\", \"libs/tommy/signal-forms/flow-forge/src/lib/flows/bank\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-registry.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"schema requires applicant+account-type+terms\", \"fixture 202 unsigned / 200 signed\", \"bankFlow registered, 3 steps\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "P2 Task 5: Insurance flow (complex fields)",
+      "status": "pending",
+      "description": "**Goal:** A flow exercising dynamic array (add/remove items), conditional reveal (injury details only when injured), and cross-field (total claimed <= features.AMOUNT.maxAmount).\n\n**Files:** create `src/lib/flows/insurance/{model,schema,fixtures,steps/policy-step,steps/incident-step,steps/items-step,def}.ts` + schema.spec.ts; modify `flow-registry.ts`.\n\n**Verify:** `pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/flows/insurance\", \"libs/tommy/signal-forms/flow-forge/src/lib/flow-registry.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-forge && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"conditional injury required only when injured\", \"cross-field total>maxAmount invalid\", \"items add/remove works\", \"insuranceFlow registered, 4 steps\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "P2 Task 6: MitID round-trip integration + docs",
+      "status": "pending",
+      "blockedBy": [2, 4, 5],
+      "description": "**Goal:** Seam-level integration test proving the bank flow's 202->redirect->callback->resume->200 round-trip, plus README updates (both apps, Vercel note) and refreshed lib README (3 flows).\n\n**Files:** create `src/lib/flows/bank/round-trip.spec.ts`; modify `README.md`, `libs/tommy/signal-forms/flow-forge/README.md`.\n\n**Verify:** `pnpm check`\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-forge/src/lib/flows/bank/round-trip.spec.ts\", \"README.md\", \"libs/tommy/signal-forms/flow-forge/README.md\"], \"verifyCommand\": \"pnpm check\", \"acceptanceCriteria\": [\"round-trip integration: 202->snapshot/redirect->resume->200->done\", \"root README: both apps + Vercel note\", \"lib README: 3 flows\", \"pnpm check passes\"]}\n```"
+    }
+  ]
+}

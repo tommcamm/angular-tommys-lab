@@ -35,3 +35,11 @@ export function parseCallback(q: { get(key: string): string | null }): Callback 
     challenge: q.get('challenge'),
   };
 }
+
+/**
+ * Origin of the mock MitID provider app (`apps/tommy/mock-idp`, dev port 4300).
+ * The bank fixture points its 202 `signingUrl` here. In production this needs a
+ * deployed provider origin; absent one, the bank flow's redirect cannot complete
+ * (dev-only / degrades — see README).
+ */
+export const MOCK_IDP_ORIGIN = 'http://localhost:4300';

@@ -105,10 +105,30 @@ and the shared `tos-step` work across every flow.
   correlation `state` nonce, then redirect to the signing URL with `state` + a
   same-origin `return` URL.
 
-The full cross-origin MitID round-trip (mock-idp → approve → rehydrate → re-submit)
-is **Plan 2**. In Plan 1 the launcher (`flow-forge.ts`) validates a returning
-callback's `state` against the snapshot and reopens the flow with a notice; it does
-not yet auto-resubmit.
+### MitID round-trip
+
+The bank flow's full step-up is now wired end to end through the seams:
+
+1. **submit → 202 `signing_required`** — the backend returns a `signingUrl` (pointing
+   at the `mock-idp` app, dev port 4300) and a `challengeId`.
+2. **persist + redirect** — the engine saves a single-use `FlowStateStore` snapshot
+   (model + `challengeId` + a `state` nonce), then redirects to the signing URL with
+   that `state` and a same-origin `return` URL (`/flow-forge?mitid=callback&flow=bank`).
+3. **user approves** — the `mock-idp` provider app (`apps/tommy/mock-idp`) approves the
+   challenge and navigates back to the `return` URL, echoing the `state` plus a
+   one-time `code`.
+4. **launcher validates + rehydrates** — the launcher (`flow-forge.ts`) checks the
+   returned `state` against the snapshot's, restores the model, and builds the
+   `ResumeData` (`{ model, signature: { challengeId, code } }`).
+5. **runner re-submits → 200 → done** — a fresh `FlowRunner` mounted with `[resume]`
+   re-fetches options, rebuilds the form, jumps to the last step, and re-submits with
+   the one-time signature; the backend now returns 200 `ok` and the flow lands on `done`
+   with a `BANK-` confirmation id.
+
+The seam-level round-trip is covered by `flows/bank/round-trip.spec.ts` (the
+`ExternalRedirect` and `FlowStateStore` seams are faked — no real cross-origin
+navigation). The *true* cross-origin browser hop is verified manually by running both
+the host and `mock-idp` apps (see the root README).
 
 ## How to add a flow
 
@@ -135,10 +155,15 @@ The launcher gallery, the runner, and the backend pick it up automatically.
 
 ## Status
 
-Plan 1 ships the **engine**, the launcher **gallery** (`flow-forge.ts`), and the
-minimal **newsletter** flow (`flows/newsletter/`). Plan 2 will add the **insurance**
-flow (complex fields), the **bank** flow (MitID signing), and the cross-origin
-`mock-idp` app for the real signing round-trip.
+All three flows now ship on top of the shared engine and launcher gallery
+(`flow-forge.ts`):
+
+- **newsletter** (`flows/newsletter/`) — the minimal flow (name + email + consent).
+- **insurance** (`flows/insurance/`) — complex fields: a dynamic array, a conditional
+  section, and a cross-field rule.
+- **bank** (`flows/bank/`) — MitID signing, with the full 202 → redirect → callback →
+  resume → 200 round-trip now wired (see *MitID round-trip* above) and the cross-origin
+  `mock-idp` provider app (`apps/tommy/mock-idp`).
 
 ## Running unit tests
 

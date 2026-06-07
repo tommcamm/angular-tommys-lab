@@ -3,7 +3,7 @@
     <p class="ui-banner-warning" role="status">{{ notice }}</p>
   }
   <button type="button" class="ui-btn ui-foot" (click)="clear()">← All flows</button>
-  <tommy-flow-runner [def]="def" />
+  <tommy-flow-runner [def]="def" [resume]="resumeData()" />
 } @else {
   <header class="ui-stack">
     <h2 class="ui-title">Flow Forge</h2>

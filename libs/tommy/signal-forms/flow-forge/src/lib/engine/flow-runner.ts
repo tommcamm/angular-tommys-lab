@@ -1,16 +1,18 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy, Component, Injector, computed, inject, input, signal,
+  ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed,
+  effect, inject, input, signal, viewChild, type OnInit,
 } from '@angular/core';
 import { submit, type FieldTree } from '@angular/forms/signals';
 import type {
-  AnyFlowDef, FlowEnvelope, FlowForm, ServerFieldError, SubmitOutcome,
+  AnyFlowDef, FlowEnvelope, FlowForm, ServerFieldError, Signature, SubmitOutcome,
 } from './flow-def';
 import { FlowBackend } from './flow-backend';
 import { ExternalRedirect } from './external-redirect';
 import { FlowStateStore } from './flow-state-store';
 import { buildReturnUrl } from './mitid';
 import { createWizard, type StepState, type Wizard } from './wizard';
+import type { ResumeData } from './resume';
 import { FlowShell } from '../ui/flow-shell';
 import { StepIndicator } from '../ui/step-indicator';
 import { ErrorBanner } from '../ui/error-banner';
@@ -23,13 +25,14 @@ declare const ngDevMode: boolean | undefined;
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './flow-runner.html',
 })
-export class FlowRunner {
+export class FlowRunner implements OnInit {
   private readonly backend = inject(FlowBackend);
   private readonly injector = inject(Injector);
   private readonly redirect = inject(ExternalRedirect);
   private readonly store = inject(FlowStateStore);
 
   readonly def = input.required<AnyFlowDef>();
+  readonly resume = input<ResumeData | null>(null);
 
   protected readonly env = signal<FlowEnvelope | null>(null);
   protected readonly flowForm = signal<FlowForm<unknown> | null>(null);
@@ -38,6 +41,25 @@ export class FlowRunner {
   protected readonly submitError = signal<string | null>(null);
   protected readonly starting = signal(false);
   protected readonly submitting = signal(false);
+  protected readonly resuming = signal(false);
+
+  private readonly stepRegion = viewChild<ElementRef<HTMLElement>>('stepRegion');
+
+  constructor() {
+    // Focus-on-step-change for a11y. Zoneless-safe: defer to afterNextRender so the
+    // new step's DOM exists before focusing (no setTimeout). Providing an explicit
+    // injector lets afterNextRender run from inside the effect callback.
+    effect(() => {
+      this.wizard().stepIndex(); // track step changes
+      if (this.resuming() || this.wizard().phase() !== 'form') return;
+      afterNextRender(() => this.stepRegion()?.nativeElement.focus(), { injector: this.injector });
+    });
+  }
+
+  ngOnInit(): void {
+    const r = this.resume();
+    if (r) void this.resumeAndSubmit(r);
+  }
 
   /**
    * ONE stable wizard per mounted runner. Built lazily on first access from the
@@ -114,7 +136,7 @@ export class FlowRunner {
     this.wizard().back();
   }
 
-  async onSubmit(): Promise<void> {
+  async onSubmit(signature?: Signature): Promise<void> {
     const ff = this.flowForm();
     if (!ff) return;
     const state = this.currentStepState();
@@ -131,7 +153,7 @@ export class FlowRunner {
       await submit(ff.form, {
         action: async (field) => {
           const payload = this.def().toSubmission(field().value());
-          const outcome = await this.backend.submit(this.def().meta.slug, payload);
+          const outcome = await this.backend.submit(this.def().meta.slug, payload, signature);
           settled.outcome = outcome;
           if (outcome.status === 'ok') {
             this.confirmationId.set(outcome.confirmationId);
@@ -162,6 +184,35 @@ export class FlowRunner {
     if (settledOutcome?.status === 'rejected') {
       this.placeRejection(settledOutcome.errors, ff);
     }
+  }
+
+  /**
+   * Resume entry point after a MitID round-trip. The full-page redirect destroyed
+   * the SPA, so we re-fetch options (the GET is idempotent), rebuild the form,
+   * restore the persisted model, jump to the last step, and re-submit with the
+   * one-time signature to land the 200.
+   */
+  private async resumeAndSubmit(r: ResumeData): Promise<void> {
+    this.resuming.set(true);
+    try {
+      const def = this.def();
+      const env = await this.backend.loadOptions(def.meta.slug);
+      this.env.set(env);
+      const ff = def.buildForm(env, this.injector);
+      const restored = def.restore ? def.restore(r.model) : r.model;
+      ff.model.set(restored as never);
+      this.flowForm.set(ff);
+      this.wizard().stepIndex.set(def.steps.length - 1);
+      this.wizard().phase.set('form');
+    } catch (e) {
+      if (typeof ngDevMode !== 'undefined' && ngDevMode) console.error('[flow-forge] resume load failed', e);
+      this.loadError.set('Could not complete your signing. Please retry.');
+      this.resuming.set(false);
+      this.wizard().phase.set('intro');
+      return;
+    }
+    this.resuming.set(false);
+    await this.onSubmit(r.signature);
   }
 
   // When a flow provides no `mapServerError`, server errors attach to the ROOT
@@ -224,6 +275,7 @@ export class FlowRunner {
     this.submitError.set(null);
     this.starting.set(false);
     this.submitting.set(false);
+    this.resuming.set(false);
     this.wizard().reset();
   }
 }

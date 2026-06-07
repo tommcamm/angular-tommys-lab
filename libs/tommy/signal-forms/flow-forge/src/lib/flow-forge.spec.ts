@@ -54,4 +54,13 @@ describe('FlowForge launcher', () => {
     // not selected → gallery shown, no runner
     expect(el.querySelector('tommy-flow-runner')).toBeNull();
   });
+
+  it('approved callback with matching state resumes the runner', () => {
+    const store = new FlowStateStore();
+    store.save({ flowSlug: 'newsletter', schemaVersion: 1, state: 'S1', challengeId: 'ch', model: { contact: { name: 'T', email: 't@e.com' }, prefs: { frequency: 'weekly' }, tos: [] } });
+    const fixture = mount(routeWith({ mitid: 'callback', flow: 'newsletter', status: 'approved', state: 'S1', code: 'otc-1' }));
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('tommy-flow-runner')).not.toBeNull();          // flow selected + runner mounted
+    expect(el.textContent).toContain('Completing your MitID signing');     // runner's resuming branch (ngOnInit set resuming=true)
+  });
 });
