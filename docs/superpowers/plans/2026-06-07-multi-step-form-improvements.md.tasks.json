@@ -1,0 +1,25 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-07-multi-step-form-improvements.md",
+  "tasks": [
+    {
+      "id": 6,
+      "subject": "Task 1: FieldError — hide error once the field is edited",
+      "status": "pending",
+      "description": "**Goal:** An inline field error shows only while the field is invalid AND has not been edited since the last validation reset (`!dirty()`).\n\n**Files:**\n- Modify: libs/tommy/signal-forms/multi-step-form/src/lib/ui/field-error.ts\n- Test: libs/tommy/signal-forms/multi-step-form/src/lib/ui/field-error.spec.ts\n\n**Acceptance Criteria:**\n- pristine+invalid+show shows error\n- dirty+invalid+show shows nothing\n- existing FieldError tests pass\n\n**Verify:** pnpm nx test tommy-signal-forms-multi-step-form -- field-error\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/multi-step-form/src/lib/ui/field-error.ts\", \"libs/tommy/signal-forms/multi-step-form/src/lib/ui/field-error.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-multi-step-form -- field-error\", \"acceptanceCriteria\": [\"pristine+invalid+show shows error\", \"dirty+invalid+show shows nothing\", \"existing FieldError tests pass\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 2: Shared spinner + equal-size panel (CSS)",
+      "status": "pending",
+      "description": "**Goal:** Add a reusable `.ui-spinner`, give `.ui-card` an equal `min-height`, and right-group the nav row pinned to the bottom.\n\n**Files:**\n- Modify: libs/tommy/signal-forms/multi-step-form/src/lib/ui/ui.css\n\n**Acceptance Criteria:**\n- .ui-spinner exists\n- .ui-card min-height equalizes steps\n- .ui-row flex-end\n- .ui-foot margin-top auto\n- nx build tommy-host succeeds\n\n**Verify:** pnpm nx build tommy-host\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/multi-step-form/src/lib/ui/ui.css\"], \"verifyCommand\": \"pnpm nx build tommy-host\", \"acceptanceCriteria\": [\".ui-spinner exists\", \".ui-card min-height equalizes steps\", \".ui-row flex-end\", \".ui-foot margin-top auto\", \"nx build tommy-host succeeds\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 3: MultiStepFlow container — spinners, gate, frozen banner, Back-to-intro",
+      "status": "pending",
+      "blockedBy": [6, 7],
+      "description": "**Goal:** Rework the container: Start/Submit inline spinners, Back grouped right + Back-to-intro with resume, per-step gate with frozen banner + clear-on-edit inline errors via FieldState.reset().\n\n**Files:**\n- Modify: libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.ts\n- Modify: libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.html\n- Test: libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.spec.ts\n\n**Acceptance Criteria:**\n- Start disabled+spinner then advances\n- load failure shows inline loadError retry\n- Back grouped right; Profile Back->intro; Start resumes with data, no re-fetch\n- banner frozen per-step, changes only on Next/Submit\n- inline error clears on edit, returns only on next press\n- Submit disabled+spinner; success->done; server taken->account inline+banner\n- all container tests pass\n\n**Verify:** pnpm nx test tommy-signal-forms-multi-step-form && pnpm nx build tommy-host\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.ts\", \"libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.html\", \"libs/tommy/signal-forms/multi-step-form/src/lib/multi-step-flow.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-multi-step-form && pnpm nx build tommy-host\", \"acceptanceCriteria\": [\"Start disabled+spinner then advances\", \"load failure shows inline loadError retry\", \"Back grouped right; Profile Back->intro; Start resumes with data, no re-fetch\", \"banner frozen per-step, changes only on Next/Submit\", \"inline error clears on edit, returns only on next press\", \"Submit disabled+spinner; success->done; server taken->account inline+banner\", \"all container tests pass\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-07"
+}
