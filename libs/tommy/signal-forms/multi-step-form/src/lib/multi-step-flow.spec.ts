@@ -145,6 +145,12 @@ describe('MultiStepFlow', () => {
     expect(el.textContent).toContain('Username'); // back on the account step
     const alert = el.querySelector('[role=alert]');
     expect(alert?.textContent).toContain('already taken'); // surfaced via the banner
+    // ...and inline on the username field (the reason the account subtree is reset).
+    const usernameError = el
+      .querySelector('#ms-username')!
+      .closest('.ui-field')!
+      .querySelector('.ui-error');
+    expect(usernameError?.textContent).toContain('already taken');
   });
 
   it('does not show errors or the banner on blur, before Next is pressed', async () => {

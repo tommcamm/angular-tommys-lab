@@ -13,6 +13,7 @@
     type="button"
     class="ui-btn ui-btn-primary ui-foot"
     [disabled]="starting()"
+    [attr.aria-busy]="starting()"
     (click)="start()"
   >
     @if (starting()) {
@@ -55,6 +56,7 @@
       type="button"
       class="ui-btn ui-btn-primary"
       [disabled]="submitting()"
+      [attr.aria-busy]="submitting()"
       (click)="onSubmit()"
     >
       @if (submitting()) {
