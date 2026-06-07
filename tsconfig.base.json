@@ -14,8 +14,12 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
-      "@tommy/signal-forms": ["./libs/tommy/signal-forms/src/index.ts"],
-      "@tommy/multi-step-form": ["./libs/tommy/multi-step-form/src/index.ts"]
+      "@tommy/signal-forms/simple-form": [
+        "./libs/tommy/signal-forms/simple-form/src/index.ts"
+      ],
+      "@tommy/signal-forms/multi-step-form": [
+        "./libs/tommy/signal-forms/multi-step-form/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

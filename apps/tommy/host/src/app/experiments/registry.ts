@@ -16,8 +16,9 @@ export const EXPERIMENTS: readonly Experiment[] = [
       'A sign-up form built on the experimental @angular/forms/signals API.',
     group: 'Signal Forms',
     tags: ['signals', 'experimental'],
-    sourcePath: 'libs/tommy/signal-forms',
-    load: () => import('@tommy/signal-forms').then((m) => m.TommySignalForms),
+    sourcePath: 'libs/tommy/signal-forms/simple-form',
+    load: () =>
+      import('@tommy/signal-forms/simple-form').then((m) => m.SimpleForm),
   },
   {
     slug: 'multi-step-form',
@@ -26,8 +27,10 @@ export const EXPERIMENTS: readonly Experiment[] = [
       'A multi-step signup wizard on @angular/forms/signals: backend-driven constraints, composed schemas, and a server-error submit.',
     group: 'Signal Forms',
     tags: ['signals', 'multi-step', 'experimental'],
-    sourcePath: 'libs/tommy/multi-step-form',
+    sourcePath: 'libs/tommy/signal-forms/multi-step-form',
     load: () =>
-      import('@tommy/multi-step-form').then((m) => m.MultiStepFlow),
+      import('@tommy/signal-forms/multi-step-form').then(
+        (m) => m.MultiStepFlow,
+      ),
   },
 ];

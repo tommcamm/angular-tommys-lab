@@ -22,7 +22,7 @@ describe('experiments registry', () => {
 
   it('builds a GitHub source URL', () => {
     expect(sourceUrl(EXPERIMENTS[0])).toBe(
-      `${REPO_URL}/tree/main/libs/tommy/signal-forms`,
+      `${REPO_URL}/tree/main/libs/tommy/signal-forms/simple-form`,
     );
   });
 

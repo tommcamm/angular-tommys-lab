@@ -6,21 +6,10 @@ A personal Angular workspace for building focused experiments with new framework
 
 ## Current Experiments
 
-### Signal Forms
-
-A standalone sign-up form built with Angular's experimental `@angular/forms/signals` API. It covers signal-backed models, validation, field state, and form submission.
-
-### Multi-Step Form
-
-A signup-style wizard that explores:
-
-- backend-driven validation constraints
-- reusable and composed schemas
-- cross-field validation
-- dynamic form arrays
-- deferred validation messages
-- server errors mapped back to fields
-- one root form shared across presentational steps
+| Experiment | Description |
+| --- | --- |
+| Simple Form | A standalone sign-up form covering signal-backed models, validation, field state, and submission. |
+| Multi-Step Form | A signup wizard covering composed schemas, backend-driven constraints, dynamic arrays, deferred validation, and server errors. |
 
 ## Stack
 
@@ -63,7 +52,7 @@ Use Nx directly for project-specific tasks:
 
 ```bash
 pnpm exec nx show projects
-pnpm exec nx test tommy-multi-step-form
+pnpm exec nx test tommy-signal-forms-multi-step-form
 pnpm exec nx build tommy-host
 pnpm exec nx graph
 ```
@@ -74,15 +63,16 @@ pnpm exec nx graph
 apps/
   tommy/host/                 Angular host and experiment navigation
 libs/
-  tommy/signal-forms/         Single-page signal forms experiment
-  tommy/multi-step-form/      Multi-step signal forms experiment
+  tommy/signal-forms/
+    simple-form/               Single-page signal forms experiment
+    multi-step-form/           Multi-step signal forms experiment
 docs/superpowers/             Design notes and implementation plans
 ```
 
 The host derives its navigation and lazy routes from
-`apps/tommy/host/src/app/experiments.ts`. Add a new experiment as an Nx library
-under `libs/tommy`, export its entry component, add its TypeScript path alias,
-and register one entry in `EXPERIMENTS`.
+`apps/tommy/host/src/app/experiments/registry.ts`. Add a new experiment as an Nx
+library under the relevant topic in `libs/tommy`, export its entry component,
+add its TypeScript path alias, and register one entry in `EXPERIMENTS`.
 
 ## CI
 

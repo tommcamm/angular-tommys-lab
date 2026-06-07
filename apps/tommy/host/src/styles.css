@@ -5,7 +5,7 @@
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
-@source '../../../../libs/tommy/multi-step-form';
+@source '../../../../libs/tommy/signal-forms/multi-step-form';
 
 /* You can add global styles to this file, and also import other style files */
 
