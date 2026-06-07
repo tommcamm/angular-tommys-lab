@@ -104,15 +104,53 @@ interface FlowDef<Model, Features> {
 Supporting types:
 
 ```ts
-interface FlowEnvelope<Features> {     // the backend's GET response — "features + terms"
-  readonly features: Features;          // per-flow typed bag of constraints/config
-  readonly terms: readonly TermItem[];  // the TOS list (shared shape)
-}
-
-interface TermItem { readonly id: string; readonly title: string; readonly body: string; readonly required: boolean; }
-
 interface FlowForm<Model> { readonly model: WritableSignal<Model>; readonly form: FieldTree<Model>; }
 ```
+
+### Feature & terms descriptors — uniform envelope, per-flow keys
+
+The backend's GET returns the **same envelope for every flow** — `{ features, terms }` — where
+`features` and `terms` are **keyed maps of descriptors**. The *key set* differs greatly flow to
+flow, but each entry shares a common descriptor base, and that base is what shared engine/schema
+helpers read uniformly:
+
+```ts
+// As returned by the backend, e.g.:
+// { features: { USERNAME: { mandatory: true, minLength: 4, maxLength: 20 },
+//               AMOUNT:   { mandatory: true, minAmount: 100, maxAmount: 50000 } },
+//   terms:    { privacy:  { title: '…', body: '…', required: true },
+//               marketing:{ title: '…', body: '…', required: false } } }
+
+interface FeatureDescriptor { readonly mandatory: boolean; /* + room for visible?, label?, … */ }
+type    FeatureMap          = Readonly<Record<string, FeatureDescriptor>>; // every value EXTENDS the base
+
+interface TermDescriptor    { readonly title: string; readonly body: string; readonly required: boolean; }
+type    TermsMap            = Readonly<Record<string, TermDescriptor>>;
+
+interface FlowEnvelope<Features extends FeatureMap = FeatureMap> {
+  readonly features: Features;   // uniform envelope; per-flow keys + per-key constraint refinements
+  readonly terms: TermsMap;
+}
+
+// A flow refines the descriptors for ITS keys (authored with `satisfies FeatureMap`):
+type BankFeatures = {
+  readonly USERNAME: FeatureDescriptor & { readonly minLength: number; readonly maxLength: number };
+  readonly AMOUNT:   FeatureDescriptor & { readonly minAmount: number; readonly maxAmount: number };
+};
+```
+
+Two consequences this design now makes explicit:
+
+- **Shared, feature-aware schema helpers.** Because every descriptor carries the common base, a
+  helper like `applyFeature(node, features.USERNAME, { ... })` (which reads `mandatory` to apply
+  `required`, etc.) works for *any* feature in *any* flow. Flows that share a feature code (many
+  will have `USERNAME`) reuse the helper, not just copy logic — this is the "structure stays the
+  same" lever for 30+ flows. These live in `engine/schema-helpers.ts`.
+- **Terms map → form array bridge.** `terms` arrives as a keyed map, but the form *model* keeps the
+  acceptance list as an array so signal forms' `applyEach` validates it (the existing pattern).
+  `buildForm`/`emptyModel` converts `Object.entries(terms)` → `tos: { id, required, accepted }[]`,
+  preserving key/insertion order for the shared TOS step. The backend shape and the form shape are
+  bridged in one place, not leaked into every flow.
 
 ### Typed step contract (#1 — AOT safety)
 
@@ -136,7 +174,7 @@ interface StepDef<Model> {                          // generics erased to Model 
   readonly label: string;                           // step indicator
   readonly component: Type<StepComponent<unknown, unknown>>;
   field(form: FieldTree<Model>): FieldTree<unknown>;
-  data?(env: FlowEnvelope<unknown>): unknown;
+  data?(env: FlowEnvelope): unknown;
 }
 
 // Compile-time-safe constructor: `field`'s return type MUST match the component's Slice.
@@ -145,7 +183,7 @@ function defineStep<Model, Slice, Data = never>(cfg: {
   label: string;
   component: Type<StepComponent<Slice, Data>>;
   field: (form: FieldTree<Model>) => FieldTree<Slice>;
-  data?: (env: FlowEnvelope<unknown>) => Data;
+  data?: (env: FlowEnvelope) => Data;
 }): StepDef<Model>;
 ```
 
@@ -166,7 +204,7 @@ Every flow calls the same GET (options) and the same POST (submit), differing on
 ```ts
 @Injectable({ providedIn: 'root' })
 class FlowBackend {
-  loadOptions(slug: string): Promise<FlowEnvelope<unknown>>;                 // GET /flows/:slug/options
+  loadOptions(slug: string): Promise<FlowEnvelope>;                 // GET /flows/:slug/options
   submit(slug: string, payload: unknown, signature?: Signature): Promise<SubmitOutcome>; // POST /flows/:slug
 }
 interface Signature { readonly challengeId: string; readonly code: string; } // opaque one-time proof (#3)
@@ -177,9 +215,9 @@ into a `FLOW_FIXTURES` map keyed by slug that the backend reads:
 
 ```ts
 // flows/<flow>/fixtures.ts contributes:
-interface FlowFixture<Features> {
-  readonly features: Features;
-  readonly terms: readonly TermItem[];
+interface FlowFixture<Features extends FeatureMap> {
+  readonly features: Features;   // authored with `satisfies FeatureMap`
+  readonly terms: TermsMap;      // keyed map of TermDescriptor
   submit(payload: unknown, signature?: Signature): SubmitOutcome;  // the flow's submit rules
 }
 ```
@@ -360,7 +398,8 @@ flows/bank/         SIGNING    intro → applicant → account-type → tos → 
 - **Insurance (complex fields):** exercises every "complex field" pattern — a dynamic
   array via `applyEach` with add/remove UI, conditional fields revealed by a sibling
   value (schema `validate` conditioned on the sibling + conditional template render),
-  and cross-field validation reading `features` (e.g. claimed amount ≤ policy coverage).
+  and cross-field validation reading a keyed feature descriptor (e.g. claimed amount ≤
+  `features.AMOUNT.maxAmount`). Also demonstrates `applyFeature` reuse across flows.
 - **Bank (in-context signing):** ordinary-looking steps; its fixture returns 202 on
   submit, driving the engine's MitID round-trip. Distinguishing dimension is the
   post-submit step-up, performed by the engine, not the flow.
@@ -387,7 +426,8 @@ libs/tommy/signal-forms/flow-forge/src/
   index.ts                      → exports FlowForge
   lib/
     engine/
-      flow-def.ts               → FlowDef, StepDef, FlowEnvelope, TermItem, SubmitOutcome, ServerFieldError, Signature
+      flow-def.ts               → FlowDef, StepDef/StepComponent/defineStep, FlowEnvelope, Feature/TermDescriptor maps, SubmitOutcome, ServerFieldError, Signature
+      schema-helpers.ts         → shared feature-aware schema helpers (applyFeature, etc.)
       wizard.ts                 → createWizard() headless controller (phase/stepIndex/gate/nav)
       flow-runner.ts            → <flow-runner [def]> engine component (render + submit coordination)
       flow-backend.ts           → shared FlowBackend service + FLOW_FIXTURES registry
@@ -422,8 +462,9 @@ apps/tommy/mock-idp/            → minimal Approve/Cancel app (own serve target
 ## Testing & verification
 
 - **Engine:** `createWizard` gate/nav transitions (incl. frozen-snapshot behavior);
-  `flow-state-store` round-trip + version-mismatch discard + single-use; `flow-runner` DOM happy
-  path and the 422 server-error path through signal-forms `submit()` (ports `multi-step-flow.spec.ts`).
+  `flow-state-store` round-trip + version-mismatch discard + single-use; `schema-helpers`
+  (`applyFeature` applies `required`/constraints from a `FeatureDescriptor`); `flow-runner` DOM
+  happy path and the 422 server-error path through signal-forms `submit()` (ports `multi-step-flow.spec.ts`).
 - **Step contract (#1):** a per-step contract test asserts each step component exposes the
   engine-bound inputs (`field`, `showErrors`, and `data` where used) — covers the runtime
   `NgComponentOutlet` binding that the type system can't verify.
