@@ -182,6 +182,8 @@ describe('Bank flow — MitID round-trip (seam-faked integration)', () => {
 
     const text = (fixtureB.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('All set');
-    expect(text).toMatch(/BANK-/);
+    // Exact id proves the CPR-derived challengeId survived the whole round-trip:
+    // Phase A fills CPR `0101010001` → challengeId `bank-0001` → confirmationId `BANK-bank-0001`.
+    expect(text).toContain('BANK-bank-0001');
   });
 });
