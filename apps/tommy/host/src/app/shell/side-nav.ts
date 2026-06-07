@@ -59,6 +59,7 @@ import { GithubIcon } from './github-icon';
   `,
   styles: `
     :host {
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
@@ -72,7 +73,17 @@ import { GithubIcon } from './github-icon';
       color: var(--sidebar-text-strong);
       text-decoration: none;
     }
-    nav { display: flex; flex-direction: column; gap: 0.75rem; }
+    /* Grows to fill the space between brand and repo link, and scrolls on its own
+       when the experiment list outgrows the viewport — keeping the GitHub link
+       pinned to the bottom without a full-sidebar scroll. */
+    nav {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
     .group-heading {
       display: flex;
       align-items: center;
@@ -108,7 +119,6 @@ import { GithubIcon } from './github-icon';
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin-top: auto;
       padding-top: 1rem;
       border-top: 1px solid var(--sidebar-border);
       color: var(--sidebar-muted);

@@ -79,6 +79,21 @@ describe('CommandPalette', () => {
     expect(f.componentInstance.open()).toBe(false);
   });
 
+  it('focuses the search input on open so the keyboard works immediately', async () => {
+    const f = TestBed.createComponent(CommandPalette);
+    document.body.appendChild(f.nativeElement);
+    try {
+      f.componentInstance.openPalette();
+      await f.whenStable();
+      const input = f.nativeElement.querySelector('.palette-input');
+      expect(input).toBeTruthy();
+      expect(document.activeElement).toBe(input);
+    } finally {
+      f.destroy();
+      f.nativeElement.remove();
+    }
+  });
+
   it('toggle alternates the open state', () => {
     const f = make();
     expect(f.componentInstance.open()).toBe(false);

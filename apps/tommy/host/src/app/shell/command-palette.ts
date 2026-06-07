@@ -2,6 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   inject,
   signal,
@@ -125,6 +127,7 @@ import { type Experiment, groupExperiments } from '../experiments';
 })
 export class CommandPalette {
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
   private readonly searchInput =
     viewChild<ElementRef<HTMLInputElement>>('search');
   private trigger: HTMLElement | null = null;
@@ -165,7 +168,13 @@ export class CommandPalette {
     this.query.set('');
     this.activeIndex.set(0);
     this.open.set(true);
-    queueMicrotask(() => this.searchInput()?.nativeElement.focus());
+    // Focus AFTER the next render: `open.set(true)` only schedules the view that
+    // contains `#search`, and in zoneless mode that tick is a macrotask. A bare
+    // microtask (queueMicrotask) would run first, before the input exists, and
+    // silently no-op — leaving the palette unfocused so the keyboard does nothing.
+    afterNextRender(() => this.searchInput()?.nativeElement.focus(), {
+      injector: this.injector,
+    });
   }
 
   close(): void {

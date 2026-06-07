@@ -25,7 +25,7 @@ export const EXPERIMENTS: readonly Experiment[] = [
     description:
       'A multi-step signup wizard on @angular/forms/signals: backend-driven constraints, composed schemas, and a server-error submit.',
     group: 'Signal Forms',
-    tags: ['signals', 'multi-step'],
+    tags: ['signals', 'multi-step', 'experimental'],
     sourcePath: 'libs/tommy/multi-step-form',
     load: () =>
       import('@tommy/multi-step-form').then((m) => m.MultiStepFlow),
