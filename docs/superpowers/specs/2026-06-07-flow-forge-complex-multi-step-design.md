@@ -86,13 +86,18 @@ interface FlowDef<Model, Features> {
     intro: string;      // intro-page copy
     dimension: 'minimal' | 'complex' | 'signing';  // gallery badge
   };
+  readonly schemaVersion: number;                        // bumped on any Model shape change; gates snapshot restore (#4)
   buildForm(env: FlowEnvelope<Features>, injector: Injector): FlowForm<Model>;  // signal forms
-  readonly steps: readonly StepDef<Model, Features>[];   // ordered; the last step submits
+  readonly steps: readonly StepDef<Model>[];             // ordered; the last step submits
   toSubmission(model: Model): unknown;                   // model → POST payload
-  mapServerError?(                                        // optional: place a 422 field error
+  mapServerError?(                                        // optional: route a 422 field error to a node
     err: ServerFieldError,
     form: FieldTree<Model>,
-  ): { stepKey: string; node: FieldTree<unknown> };
+  ): { stepKey: string; fieldTree: FieldTree<unknown> }; // default: { last step, root form } (#2)
+  // Snapshot serialization for the MitID round-trip. Default = JSON round-trip; override only
+  // if Model holds non-JSON values (Date, Map, …). Model SHOULD otherwise be JSON-serializable (#4).
+  snapshot?(model: Model): unknown;
+  restore?(raw: unknown): Model;
 }
 ```
 
@@ -106,15 +111,42 @@ interface FlowEnvelope<Features> {     // the backend's GET response — "featur
 
 interface TermItem { readonly id: string; readonly title: string; readonly body: string; readonly required: boolean; }
 
-interface StepDef<Model, Features> {
-  readonly key: string;                                   // gate key + step identity
-  readonly label: string;                                 // step indicator
-  readonly component: Type<unknown>;                       // an ordinary Angular component
-  field(form: FieldTree<Model>): FieldTree<unknown>;       // which slice this step validates/gates
-  inputs?(env: FlowEnvelope<Features>, form: FieldTree<Model>): Record<string, unknown>; // extra @Inputs
+interface FlowForm<Model> { readonly model: WritableSignal<Model>; readonly form: FieldTree<Model>; }
+```
+
+### Typed step contract (#1 — AOT safety)
+
+`NgComponentOutlet`'s `[ngComponentOutletInputs]` is `Record<string, unknown>` and is **not**
+statically checked against the target component. So instead of an arbitrary inputs bag, the
+engine binds a **fixed, known set** — `field`, `showErrors`, and an optional `data` — to every
+step, and each step component implements a typed contract. Compile-time safety comes from a
+`defineStep()` factory that ties the field-slice type to the component's `Slice`; the runtime
+binding is covered by a per-step contract test.
+
+```ts
+// Every step component implements this — the engine binds exactly these three inputs.
+interface StepComponent<Slice, Data = never> {
+  readonly field: InputSignal<FieldTree<Slice>>;   // the slice to edit (engine-bound)
+  readonly showErrors: InputSignal<boolean>;        // gate "attempted" state (engine-bound)
+  readonly data?: InputSignal<Data>;                // optional flow context, e.g. TOS terms (engine-bound)
 }
 
-interface FlowForm<Model> { readonly model: WritableSignal<Model>; readonly form: FieldTree<Model>; }
+interface StepDef<Model> {                          // generics erased to Model at the registry boundary
+  readonly key: string;                             // gate key + step identity
+  readonly label: string;                           // step indicator
+  readonly component: Type<StepComponent<unknown, unknown>>;
+  field(form: FieldTree<Model>): FieldTree<unknown>;
+  data?(env: FlowEnvelope<unknown>): unknown;
+}
+
+// Compile-time-safe constructor: `field`'s return type MUST match the component's Slice.
+function defineStep<Model, Slice, Data = never>(cfg: {
+  key: string;
+  label: string;
+  component: Type<StepComponent<Slice, Data>>;
+  field: (form: FieldTree<Model>) => FieldTree<Slice>;
+  data?: (env: FlowEnvelope<unknown>) => Data;
+}): StepDef<Model>;
 ```
 
 `features` is typed per flow (`NewsletterFeatures`, `InsuranceFeatures`,
@@ -137,7 +169,7 @@ class FlowBackend {
   loadOptions(slug: string): Promise<FlowEnvelope<unknown>>;                 // GET /flows/:slug/options
   submit(slug: string, payload: unknown, signature?: Signature): Promise<SubmitOutcome>; // POST /flows/:slug
 }
-interface Signature { readonly challengeId: string; readonly token: string; }
+interface Signature { readonly challengeId: string; readonly code: string; } // opaque one-time proof (#3)
 ```
 
 The service is generic; per-flow *data* lives with the flow as a fixture, registered
@@ -171,12 +203,14 @@ interface ServerFieldError { readonly field: string; readonly message: string; }
 ```
 
 - **200 OK** — submission completed; carries a `confirmationId`.
-- **202 Accepted** — chosen status for "MitID signature required". Per RFC 7231 §6.3.3,
-  202 means the request was accepted for processing but is not complete because another
-  process must act — an exact fit for an out-of-band step-up. Re-submitting with the
-  signature completes it (→ 200).
-- **422 Unprocessable Entity** — semantic validation failure; carries field errors.
-  Generalizes today's hard-coded "username taken" path.
+- **202 Accepted** — chosen status for "MitID signature required". The first POST **creates a
+  pending signing operation** (that is what the returned `challengeId` identifies); 202 (RFC 9110
+  §15.3.3 — "the request has been accepted for processing, but the processing has not been
+  completed") describes exactly that pending, out-of-band-completion state. Re-submitting with the
+  signature completes the pending operation (→ 200). 202 is appropriate *because* the first POST
+  accepts and parks the operation — not merely as a "go away and sign" hint.
+- **422 Unprocessable Content** — semantic validation failure; carries field errors (RFC 9110
+  §15.5.21). Generalizes today's hard-coded "username taken" path.
 
 ## The engine
 
@@ -202,29 +236,47 @@ Renders the chrome and drives the async edges. It is flow-agnostic:
 
 - Phase chrome (intro/done) rendered from `def.meta` via a `flow-shell`.
 - The step indicator (from `def.steps[].label`) and the error banner (from the gate).
-- The active step rendered via **`NgComponentOutlet`** with
-  `[ngComponentOutletInputs]`, binding `field` (the slice from `step.field(form)`),
-  `showErrors` (the gate's `attempted` state), plus whatever `step.inputs?()` returns
-  (e.g. the TOS step receives `terms`).
+- The active step rendered via **`NgComponentOutlet`** with `[ngComponentOutletInputs]`, binding a
+  **fixed set** matching the `StepComponent` contract: `field` (the slice from `step.field(form)`),
+  `showErrors` (the gate's `attempted` state), and `data` (`step.data?(env)`, e.g. the TOS step
+  receives `terms`). No arbitrary inputs — the set is fixed so contract tests can cover it (#1).
 - Async edges: `loadOptions(slug)` → `buildForm`; submit coordination (below);
   persist/restore for the MitID round-trip.
 - The flow author writes no orchestration code — only `FlowDef` + components + schema +
   fixture.
 
-### Submit coordination (the Angular way)
+### Submit coordination — via signal-forms `submit()` (#2)
+
+Submission goes through the framework's root `submit(form, { action })` (the pattern the current
+`multi-step-flow.ts` already uses), **not** a bare service call. This gives full-form validation,
+the built-in `submitting()`/concurrent-submission guard, and native server-error integration —
+the action's returned errors are folded back onto the field tree by the framework.
 
 ```
 submit():
-  payload = def.toSubmission(model)
-  outcome = await backend.submit(slug, payload)              // first attempt, no signature
-  ok               → phase = 'done'
-  rejected (422)   → for each error: (def.mapServerError ?? default)(err) → place + reset subtree,
-                     freeze that step's banner, navigate to that step       (today's server-error path)
-  signing_required → store {slug, model, challengeId} ; redirect.to(signingUrl + returnUrl)  // full unload
+  await submit(form, {
+    action: async (field) => {
+      const outcome = await backend.submit(slug, toSubmission(field().value()) /*, signature? */);
+      switch (outcome.status) {
+        case 'ok':               confirmationId.set(outcome.confirmationId); return null;       // → phase 'done'
+        case 'rejected':         return outcome.errors.map(toServerError);   // {kind:'server', message, fieldTree}
+        case 'signing_required': beginSigning(outcome); return null;         // persist + redirect; page unloads
+      }
+    },
+  });
 ```
 
+- **`toServerError`** uses `(def.mapServerError ?? defaultMapper)(err, field)` to attach each 422
+  error to a `fieldTree` node and remember which step to surface. The **default mapper** attaches
+  to the **root** form field (a form-level/banner error) — well-defined for nested objects and
+  arrays, where guessing a leaf path would be wrong. After the action resolves with errors, the
+  engine navigates to the mapped step, resets that subtree, and freezes its banner (today's path,
+  generalized).
+- **`beginSigning(outcome)`** persists the snapshot and triggers `ExternalRedirect.to(...)`; the
+  full-page unload follows, so the action's resolution value is irrelevant (we return `null`).
+
 Idiomatic Angular throughout: injectable seams (`ExternalRedirect`, `FlowStateStore`),
-signal state, `ActivatedRoute` query params for the callback (no hand-parsing of
+signal state, and `ActivatedRoute` query params for the callback (no hand-parsing of
 `window.location`).
 
 ## MitID step-up — the cross-origin round-trip
@@ -234,41 +286,62 @@ the backend's 202 response. The bank flow's *fixture* demands signing; the engin
 handles it uniformly. Any flow could trigger it; no flow contains MitID code.
 
 ```
-1. User completes all steps + TOS → Submit.
+1. User completes all steps + TOS → Submit (via signal-forms submit(), see above).
 2. backend.submit('bank', payload)  →  202 { signingUrl, challengeId }
-3. Engine snapshots { slug, model, challengeId } to sessionStorage (versioned key —
-   a schema-version bump invalidates stale snapshots), then:
-   ExternalRedirect.to(signingUrl + '&return=' + <host>/flow-forge?mitid=callback&flow=bank)
+3. Engine mints a random `state` (crypto.randomUUID()) and snapshots
+   { slug, schemaVersion, state, model, challengeId } to sessionStorage, then:
+   ExternalRedirect.to(signingUrl + '&state=' + state
+                       + '&return=' + <host>/flow-forge?mitid=callback&flow=bank)
    → real full-page unload; SPA state destroyed.
 4. mock-idp (separate origin) renders Approve / Cancel, then redirects back to the
-   host callback URL with status + token.
-5. Fresh app boot. The FlowForge launcher reads ActivatedRoute.queryParamMap:
-     ?mitid=callback&flow=bank&status=approved&challenge=…&token=…
-        → restore snapshot → rebuild form via def.buildForm → re-submit WITH signature
+   host callback URL, echoing `state` and adding `status` + a one-time `code`.
+5. Fresh app boot. The FlowForge launcher reads ActivatedRoute.queryParamMap and
+   VALIDATES before acting:
+     - a snapshot exists and is single-use (delete-on-read; a re-opened callback finds none)
+     - query `state` === snapshot `state`           (correlation / CSRF)
+     - query `flow`  === snapshot `slug`
+     - `return` origin === this app's origin         (no open redirect)
+     - snapshot `schemaVersion` === def.schemaVersion (else discard — stale schema)
+   then:
+     ?mitid=callback&flow=bank&status=approved&state=…&code=…
+        → restore form via def.restore → def.buildForm → re-submit, passing the opaque
+          one-time `code` as the signature (backend verifies + consumes it)
               200 → phase = 'done'
               422 → land on TOS step + error banner
-     ?mitid=callback&status=cancelled
+     ?mitid=callback&status=cancelled (state still validated)
         → restore → select flow → land on TOS step + "Signing cancelled" banner
-   In all cases: clear the snapshot afterwards.
+   In all cases: clear the snapshot afterwards (it was already consumed on read).
 ```
+
+**Security posture (deliberate scoping, #3).** This is a simulated provider, so there is no real
+PKCE, no real signature cryptography, and no real token verification. But because Flow Forge is a
+*reusable standard*, the redirect *shape* is intentionally correct so it is safe to copy: a random
+single-use `state` for correlation/replay protection, flow+state verification against the snapshot,
+same-origin `return`-URL validation (no open redirect), and treating the proof as an **opaque
+one-time code** consumed by the re-submit rather than a long-lived credential carried around. A
+production adaptation would additionally apply OAuth 2.0 security BCP guidance (RFC 9700): real
+PKCE, exact redirect-URI registration, and short-lived server-verified codes.
 
 ### Seams and persistence
 
 - **`ExternalRedirect`** — injectable wrapper over `window.location.href =`. Specs
   substitute a fake so tests never actually navigate (and zoneless stays happy).
 - **`FlowStateStore`** — injectable serialize/restore over `sessionStorage`. Stores
-  `{ flowSlug, version, model, challengeId }`. The model is a plain serializable object
-  (it backs `signal<Model>`), so JSON round-trips; the `FieldTree` is rebuilt from the
-  model via `buildForm` on return. Versioned so a stale snapshot from an older schema
-  is discarded rather than rehydrated incorrectly. Unit-tested independently.
+  `{ flowSlug, schemaVersion, state, model: def.snapshot(model), challengeId }`. The model is
+  serialized via the flow's `snapshot()` hook (default JSON round-trip; models are expected to be
+  JSON values otherwise, #4); on return it is rehydrated via `restore()` and the `FieldTree` is
+  rebuilt from the model via `buildForm`. **Single-use**: `restore` deletes the entry on read, so a
+  re-opened/replayed callback finds nothing. The stored `schemaVersion` is compared to
+  `def.schemaVersion` and a mismatch discards the snapshot. Unit-tested independently (round-trip,
+  version-mismatch discard, single-use).
 
 ### The `mock-idp` app
 
 A minimal standalone Angular app (`apps/tommy/mock-idp`), served on its own port/origin
-in dev (cross-origin realism). It reads the `return`, `challenge`, and a flow label
+in dev (cross-origin realism). It reads `return`, `challenge`, `state`, and a flow label
 from the query, renders a MitID-styled Approve / Cancel screen, and on action redirects
-to `return` with `status` (`approved`/`cancelled`) and a `token`. No host code is
-involved in the provider UI.
+back to `return`, **echoing `state` unchanged** and adding `status` (`approved`/`cancelled`)
+plus an opaque one-time `code`. No host code is involved in the provider UI.
 
 ## The three flows
 
@@ -349,17 +422,22 @@ apps/tommy/mock-idp/            → minimal Approve/Cancel app (own serve target
 ## Testing & verification
 
 - **Engine:** `createWizard` gate/nav transitions (incl. frozen-snapshot behavior);
-  `flow-state-store` round-trip + version invalidation; `flow-runner` DOM happy path and
-  the 422 server-error path (ports the existing `multi-step-flow.spec.ts`).
-- **MitID:** with the `ExternalRedirect` seam, assert: submit → 202 → snapshot stored →
-  redirect invoked; and simulated callback boot (`approved`) → re-submit with signature →
-  `done`; (`cancelled`) → TOS + banner. No real navigation in tests.
+  `flow-state-store` round-trip + version-mismatch discard + single-use; `flow-runner` DOM happy
+  path and the 422 server-error path through signal-forms `submit()` (ports `multi-step-flow.spec.ts`).
+- **Step contract (#1):** a per-step contract test asserts each step component exposes the
+  engine-bound inputs (`field`, `showErrors`, and `data` where used) — covers the runtime
+  `NgComponentOutlet` binding that the type system can't verify.
+- **MitID:** with the `ExternalRedirect`/`FlowStateStore` seams, assert: submit → 202 → snapshot
+  stored (with `state`) → redirect invoked with `state`+`return`; simulated callback boot
+  (`approved`, matching `state`) → re-submit with the one-time `code` → `done`; (`cancelled`) →
+  TOS + banner. **Security tests:** mismatched `state` rejected, replayed callback (single-use
+  snapshot already consumed) rejected, foreign `return` origin rejected. No real navigation in tests.
 - **Per flow:** schema validation specs and a DOM smoke test. Insurance additionally:
   array add/remove, conditional reveal, cross-field rule. Bank: its fixture returns 202.
-- **mock-idp:** a light spec for Approve/Cancel building the correct return URL.
-- **AOT/templates:** run `pnpm nx build tommy-host` for the real `strictTemplates` check
-  (notably `NgComponentOutlet` inputs typing) — the lib `typecheck` is plain tsc and
-  misses templates.
+- **mock-idp:** a light spec for Approve/Cancel echoing `state` and building the correct return URL.
+- **AOT/templates:** run `pnpm nx build tommy-host` for the real `strictTemplates` check — the lib
+  `typecheck` is plain tsc and misses templates. Note `NgComponentOutlet` *inputs* are not
+  template-checked at all (a `Record`); the `defineStep()` factory + contract tests cover that gap.
 - **README:** update the root experiments table (+ Flow Forge row), document running
   both apps (`nx serve tommy-host` + `nx serve mock-idp`) and the Vercel implication
   (the redirect needs a deployed `mock-idp` origin or degrades gracefully when absent),
@@ -382,8 +460,16 @@ is just a component; drop to bespoke without leaving the standard.
   degrade gracefully (a clear "MitID provider unavailable" state) when the origin is
   absent. Implementation should not hard-fail without it.
 - **Cross-origin return.** The return URL must be absolute and origin-correct in both
-  dev and prod; centralize URL construction in `mitid.ts`.
-- **`NgComponentOutlet` input typing.** Inputs are bound as a `Record<string, unknown>`;
-  rely on the AOT build for template type safety and keep step `@Input` names stable.
-- **Snapshot versioning.** Bump the stored `version` whenever a model shape changes so a
-  stale sessionStorage snapshot is discarded rather than rehydrated incorrectly.
+  dev and prod; centralize URL construction + the same-origin check in `mitid.ts`.
+- **`NgComponentOutlet` input typing.** Inputs bind as a `Record<string, unknown>` and are **not**
+  template-checked by AOT (the earlier assumption was wrong). Mitigated by the typed `defineStep()`
+  factory (compile-time slice↔component check at definition) + per-step contract tests; keep the
+  engine-bound input set fixed (`field`/`showErrors`/`data`) and their names stable.
+- **Snapshot versioning & serialization.** `FlowDef.schemaVersion` gates restore (mismatch →
+  discard); models must be JSON-serializable unless the flow provides `snapshot()/restore()` hooks.
+- **Redirect security shape.** Keep the `state` nonce single-use, verify flow+state, and validate
+  the `return` origin even in the demo, so the copied standard isn't insecure-by-default (#3).
+- **Angular version.** Built on the installed Angular **21.2.x** (per the workspace version policy).
+  Signal forms (`@angular/forms/signals`) are experimental in 21 and stabilizing in 22 — adopted
+  deliberately; a future major may require a migration pass. No forward-compatibility is claimed
+  beyond the pinned 21.2.x line.
