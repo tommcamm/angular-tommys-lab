@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { MultiStepFlow } from './multi-step-flow';
@@ -177,24 +178,26 @@ describe('MultiStepFlow', () => {
     expect(next?.disabled).toBe(false);
   });
 
-  it('clears the banner live once the step becomes valid, then advances', async () => {
+  it('keeps the banner frozen while editing; it clears and advances only on Next', async () => {
     const fixture = await startFlow();
     clickButton(fixture, 'Next'); // reveal errors on the (empty) profile step
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('[role=alert]'),
-    ).not.toBeNull();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[role=alert]')).not.toBeNull();
 
+    // Filling the fields does NOT move the banner — it is frozen until Next.
     setInput(fixture, '#ms-firstName', 'Tommy');
     setInput(fixture, '#ms-lastName', 'C');
     setInput(fixture, '#ms-email', 'tommy@example.com');
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('[role=alert]'),
-    ).toBeNull();
+    expect(el.querySelector('[role=alert]')).not.toBeNull();
 
+    // Pressing Next now: the step is valid → banner clears AND we advance.
     clickButton(fixture, 'Next');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
       'Username',
     );
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[role=alert]'),
+    ).toBeNull();
   });
 
   it('on the last step, Submit reveals the banner and does not submit when a required item is unaccepted', async () => {
@@ -231,5 +234,98 @@ describe('MultiStepFlow', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('An unexpected error occurred'); // standalone submitError paragraph
     expect(el.textContent).toContain('Username'); // returned to the account step
+  });
+
+  it('clears a field inline error on edit and does not re-show it until the next Next', async () => {
+    const fixture = await startFlow();
+    clickButton(fixture, 'Next'); // reveal inline errors on the empty profile
+    const el = fixture.nativeElement as HTMLElement;
+    const firstNameError = () =>
+      el
+        .querySelector('#ms-firstName')!
+        .closest('.ui-field')!
+        .querySelector('.ui-error');
+
+    expect(firstNameError()).not.toBeNull();
+
+    // Start typing → that field's inline error clears.
+    setInput(fixture, '#ms-firstName', 'T');
+    expect(firstNameError()).toBeNull();
+
+    // Going invalid again (cleared) does NOT re-show it — only a Next press does.
+    setInput(fixture, '#ms-firstName', '');
+    expect(firstNameError()).toBeNull();
+
+    clickButton(fixture, 'Next');
+    expect(firstNameError()).not.toBeNull();
+  });
+
+  it('disables Start and shows a spinner while loading, then advances', async () => {
+    let resolveOpts!: (o: FlowOptions) => void;
+    stub.loadOptions = () =>
+      new Promise<FlowOptions>((r) => {
+        resolveOpts = r;
+      });
+    const fixture = TestBed.createComponent(MultiStepFlow);
+    fixture.detectChanges();
+    clickButton(fixture, 'Start');
+
+    const el = fixture.nativeElement as HTMLElement;
+    const startBtn = Array.from(el.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').includes('Starting'),
+    );
+    expect(startBtn?.disabled).toBe(true);
+    expect(el.querySelector('.ui-spinner')).not.toBeNull();
+    expect(el.textContent).toContain('Create your account'); // still on intro
+
+    resolveOpts(OPTS);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.textContent).toContain('First name');
+  });
+
+  it('Back on the profile step returns to intro and resumes with data preserved', async () => {
+    const fixture = await startFlow();
+    setInput(fixture, '#ms-firstName', 'Tommy');
+
+    clickButton(fixture, 'Back');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Create your account'); // intro
+
+    const spy = vi.spyOn(stub, 'loadOptions');
+    clickButton(fixture, 'Start');
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(el.textContent).toContain('First name'); // resumed on profile
+    expect(
+      (el.querySelector('#ms-firstName') as HTMLInputElement).value,
+    ).toBe('Tommy'); // data preserved
+    expect(spy).not.toHaveBeenCalled(); // no re-fetch
+  });
+
+  it('disables Submit and shows a spinner while submitting', async () => {
+    let resolveSubmit!: (r: SubmitResult) => void;
+    stub.submitFlow = () =>
+      new Promise<SubmitResult>((r) => {
+        resolveSubmit = r;
+      });
+    const fixture = await startFlow();
+    await fillThroughTos(fixture, 'tommy123');
+
+    clickButton(fixture, 'Submit');
+    const el = fixture.nativeElement as HTMLElement;
+    const submitBtn = Array.from(el.querySelectorAll('button')).find((b) =>
+      (b.textContent ?? '').includes('Submitting'),
+    );
+    expect(submitBtn?.disabled).toBe(true);
+    expect(el.querySelector('.ui-spinner')).not.toBeNull();
+
+    resolveSubmit({ ok: true, confirmationId: 'SIGNUP-tommy123' });
+    await fixture.whenStable();
+    await Promise.resolve();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.textContent).toContain('All set');
   });
 });
