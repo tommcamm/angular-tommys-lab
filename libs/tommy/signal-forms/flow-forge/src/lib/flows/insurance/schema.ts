@@ -28,7 +28,9 @@ export function insuranceSchema(env: FlowEnvelope) {
     applyEach(p.items, (item) => {
       required(item.description, { message: 'Item description is required' });
       validate(item.amount, (ctx) =>
-        Number(ctx.value()) > 0 ? null : { kind: 'min', message: 'Amount must be greater than 0' },
+        Number(ctx.value()) > 0
+          ? null
+          : { kind: 'amountPositive', message: 'Amount must be greater than 0' },
       );
     });
     // Cross-field over the whole array: total claimed must not exceed coverage.

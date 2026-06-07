@@ -23,7 +23,7 @@ import { FieldError } from '../../../ui/field-error';
         <tommy-field-error [field]="row.amount" [show]="showErrors()" />
       }
       <button type="button" class="ui-btn" (click)="add()">+ Add item</button>
-      @if (showErrors() && f().invalid()) {
+      @if (showErrors() && f().invalid() && !f().dirty()) {
         @for (err of f().errors(); track $index) {
           <span class="ui-error">{{ err.message }}</span>
         }

@@ -23,6 +23,6 @@ export const insuranceFixture: FlowFixture<InsuranceFeatures> = {
   submit: (payload) => ({
     status: 'ok',
     httpStatus: 200,
-    confirmationId: `CLAIM-${(payload as { items?: unknown[] }).items?.length ?? 0}`,
+    confirmationId: `CLAIM-${(payload as { policy?: { policyNumber?: string } }).policy?.policyNumber ?? 'NEW'}`,
   }),
 };
