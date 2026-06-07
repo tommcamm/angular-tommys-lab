@@ -2,9 +2,14 @@ import { NgComponentOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy, Component, Injector, computed, inject, input, signal,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
-import type { AnyFlowDef, FlowEnvelope, FlowForm } from './flow-def';
+import { submit, type FieldTree } from '@angular/forms/signals';
+import type {
+  AnyFlowDef, FlowEnvelope, FlowForm, ServerFieldError, SubmitOutcome,
+} from './flow-def';
 import { FlowBackend } from './flow-backend';
+import { ExternalRedirect } from './external-redirect';
+import { FlowStateStore } from './flow-state-store';
+import { buildReturnUrl } from './mitid';
 import { createWizard, type StepState, type Wizard } from './wizard';
 import { FlowShell } from '../ui/flow-shell';
 import { StepIndicator } from '../ui/step-indicator';
@@ -21,6 +26,8 @@ declare const ngDevMode: boolean | undefined;
 export class FlowRunner {
   private readonly backend = inject(FlowBackend);
   private readonly injector = inject(Injector);
+  private readonly redirect = inject(ExternalRedirect);
+  private readonly store = inject(FlowStateStore);
 
   readonly def = input.required<AnyFlowDef>();
 
@@ -107,9 +114,98 @@ export class FlowRunner {
     this.wizard().back();
   }
 
-  // Submit is implemented in Task 8.
   async onSubmit(): Promise<void> {
-    /* implemented in Task 8 */
+    const ff = this.flowForm();
+    if (!ff) return;
+    const state = this.currentStepState();
+    if (!state || !this.wizard().validateCurrent(state)) return;
+
+    this.submitError.set(null);
+    this.confirmationId.set(null);
+    this.submitting.set(true);
+
+    // Holder (not a bare `let`) so flow-analysis keeps the declared type after the
+    // closure runs — a captured `let` would be narrowed to `never` here.
+    const settled: { outcome: SubmitOutcome | null } = { outcome: null };
+    try {
+      await submit(ff.form, {
+        action: async (field) => {
+          const payload = this.def().toSubmission(field().value());
+          const outcome = await this.backend.submit(this.def().meta.slug, payload);
+          settled.outcome = outcome;
+          if (outcome.status === 'ok') {
+            this.confirmationId.set(outcome.confirmationId);
+            return null;
+          }
+          if (outcome.status === 'signing_required') {
+            this.beginSigning(outcome.challengeId, outcome.signingUrl, ff);
+            return null; // page is about to unload
+          }
+          // rejected (422): fold errors back onto the tree
+          return outcome.errors.map((e) => this.toServerError(e, ff.form));
+        },
+      });
+    } catch {
+      this.submitError.set('An unexpected error occurred. Please try again.');
+    } finally {
+      this.submitting.set(false);
+    }
+
+    if (this.confirmationId()) {
+      this.wizard().phase.set('done');
+      return;
+    }
+    if (settled.outcome?.status === 'rejected') {
+      this.placeRejection(settled.outcome.errors, ff);
+    }
+  }
+
+  private toServerError(e: ServerFieldError, form: FieldTree<unknown>) {
+    const mapped = this.def().mapServerError?.(e, form);
+    return {
+      kind: 'server' as const,
+      message: e.message,
+      fieldTree: mapped?.fieldTree ?? form,
+    };
+  }
+
+  /** After a 422, freeze the banner on the mapped step and navigate to it. */
+  private placeRejection(
+    errors: readonly ServerFieldError[],
+    ff: FlowForm<unknown>,
+  ): void {
+    const def = this.def();
+    const first = errors[0];
+    const mapped = first ? def.mapServerError?.(first, ff.form) : undefined;
+    const stepKey = mapped?.stepKey ?? def.steps[0].key;
+    const node = (mapped?.fieldTree ?? ff.form) as FieldTree<unknown>;
+    node().reset();
+    this.wizard().freezeBanner(stepKey, errors.map((e) => e.message));
+  }
+
+  /** 202 branch: snapshot (with a state nonce) then leave the SPA. */
+  private beginSigning(
+    challengeId: string,
+    signingUrl: string,
+    ff: FlowForm<unknown>,
+  ): void {
+    const def = this.def();
+    const state = crypto.randomUUID();
+    const model = def.snapshot
+      ? def.snapshot(ff.model())
+      : JSON.parse(JSON.stringify(ff.model()));
+    this.store.save({
+      flowSlug: def.meta.slug,
+      schemaVersion: def.schemaVersion,
+      state,
+      challengeId,
+      model,
+    });
+    const returnUrl = buildReturnUrl(this.redirect.origin, def.meta.slug);
+    const u = new URL(signingUrl);
+    u.searchParams.set('state', state);
+    u.searchParams.set('return', returnUrl);
+    this.redirect.to(u.toString());
   }
 
   reset(): void {
