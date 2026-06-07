@@ -28,6 +28,8 @@ export function tosAcksFrom(terms: TermsMap): TosAck[] {
     @let terms = data();
     <div class="ui-stack">
       @for (ack of f; track $index; let i = $index) {
+        <!-- A step's field array and its data map must share keys: the model's
+             tos is built from this same terms map via tosAcksFrom, so every id resolves. -->
         @let item = terms[f[i]().value().id];
         <label class="ui-tos-item">
           <input type="checkbox" [formField]="ack.accepted" />
