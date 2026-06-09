@@ -3,11 +3,13 @@ import { FlowStateStore } from './flow-state-store';
 import { parseCallback } from './mitid';
 import type { PendingResume } from './resume';
 
-interface Cached {
-  readonly slug: string;
-  readonly status: 'approved' | 'cancelled';
-  readonly pending: PendingResume | null;
-}
+/**
+ * Discriminated union so the type proves the invariant: an `approved` cache always
+ * carries a `pending`, a `cancelled` one never does — no nullable-pending type-lie.
+ */
+type Cached =
+  | { readonly slug: string; readonly status: 'approved'; readonly pending: PendingResume }
+  | { readonly slug: string; readonly status: 'cancelled'; readonly pending: null };
 
 /**
  * Single-read front for the single-use MitID snapshot. The launcher calls `consume`
@@ -24,6 +26,9 @@ export class FlowResume {
    * The sole `parseCallback` + `store.restore` reader. `versionFor` maps a slug to its
    * `schemaVersion` (the launcher supplies it from the flow configs). Returns the slug
    * to auto-select, or null when there is no valid callback to resume.
+   *
+   * Idempotent: only the first call reads sessionStorage; later calls return the same
+   * slug (or null) regardless of the arguments passed.
    */
   consume(
     q: { get(key: string): string | null },
@@ -48,6 +53,8 @@ export class FlowResume {
         pending: { model: snap.model, signature: { challengeId: snap.challengeId, code: cb.code } },
       };
     } else {
+      // Cancelled, or an approved callback missing its one-time code — degrade safely
+      // to "cancelled" (review/resubmit) rather than resume with no signature.
       this.cached = { slug: cb.flow, status: 'cancelled', pending: null };
     }
     return cb.flow;

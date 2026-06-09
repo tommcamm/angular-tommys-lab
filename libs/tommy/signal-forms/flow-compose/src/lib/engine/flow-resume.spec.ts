@@ -41,6 +41,15 @@ describe('FlowResume', () => {
     expect(r.cancelledNotice('bank')).toBe(true);
   });
 
+  it('approved callback missing code → degrades to cancelled (no pending)', () => {
+    saveSnapshot('st-x');
+    const r = TestBed.inject(FlowResume);
+    const slug = r.consume(qmap({ mitid: 'callback', flow: 'bank', status: 'approved', state: 'st-x' }), VERSION);
+    expect(slug).toBe('bank'); // valid state match, so the flow is still selected
+    expect(r.pending('bank')).toBeNull();
+    expect(r.cancelledNotice('bank')).toBe(true);
+  });
+
   it('state mismatch (replay) → null, no pending', () => {
     saveSnapshot('st-real');
     const r = TestBed.inject(FlowResume);
