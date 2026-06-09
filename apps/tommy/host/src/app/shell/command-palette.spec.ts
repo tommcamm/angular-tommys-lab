@@ -35,10 +35,10 @@ describe('CommandPalette', () => {
     const slugs = c.results().flatMap((g) => g.experiments.map((e) => e.slug));
     expect(slugs).toEqual(['multi-step-form']);
 
-    c.query.set('multi'); // matches the 'multi-step' tag (wizard + flow-forge)
+    c.query.set('multi'); // matches the 'multi-step' tag (wizard + flow-forge + flow-compose)
     expect(
       c.results().flatMap((g) => g.experiments.map((e) => e.slug)),
-    ).toEqual(['multi-step-form', 'flow-forge']);
+    ).toEqual(['multi-step-form', 'flow-forge', 'flow-compose']);
   });
 
   it('Enter routes to the active experiment and closes', () => {

@@ -44,4 +44,15 @@ export const EXPERIMENTS: readonly Experiment[] = [
     load: () =>
       import('@tommy/signal-forms/flow-forge').then((m) => m.FlowForge),
   },
+  {
+    slug: 'flow-compose',
+    title: 'Flow Compose',
+    description:
+      'Flow Forge v2: composition over interpretation — each flow is a component that composes the runner via <ng-template flowStep>, with per-flow intro/receipt slots.',
+    group: 'Signal Forms',
+    tags: ['signals', 'multi-step', 'experimental'],
+    sourcePath: 'libs/tommy/signal-forms/flow-compose',
+    load: () =>
+      import('@tommy/signal-forms/flow-compose').then((m) => m.FlowCompose),
+  },
 ];

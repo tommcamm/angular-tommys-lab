@@ -18,6 +18,7 @@ describe('experiments registry', () => {
       'signal-forms',
       'multi-step-form',
       'flow-forge',
+      'flow-compose',
     ]);
   });
 
