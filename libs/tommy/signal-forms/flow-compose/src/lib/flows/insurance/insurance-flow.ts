@@ -35,19 +35,24 @@ export class InsuranceFlow {
   protected readonly form = computed(() =>
     this.env.hasValue() ? insuranceForm(this.model, this.env.value()!, this.injector) : undefined,
   );
-  // Held back until the form has rendered (see bank-flow for the timing rationale).
+  // Held back until the form (and thus the projected step inputs) has rendered: the
+  // runner's resume effect reads the active step's `field` input synchronously, so the
+  // step <ng-template>s must be committed before the signature reaches the runner.
   protected readonly signature = signal<Signature | null>(null);
   protected readonly loadErrorMsg = computed(() =>
     this.env.error() ? 'Could not start this flow. Please retry.' : null,
   );
 
   constructor() {
-    // Seed env-derived defaults (the tos[] array) once env resolves — NOT when resuming.
+    // Seed env-derived defaults (the tos[] array) once env resolves — NOT when resuming
+    // (the restored model already carries the user's tos answers).
     effect(() => {
       if (this.pending || !this.env.hasValue()) return;
       this.model.update((m) => ({ ...m, tos: tosAcksFrom(this.env.value()!.terms) }));
     });
 
+    // Resume case: once the form exists, defer the signature one render so the step
+    // templates' `[flowStep]` inputs are committed before the runner re-submits.
     const sig = this.pending?.signature;
     if (sig) {
       let scheduled = false;
