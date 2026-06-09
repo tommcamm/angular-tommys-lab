@@ -31,7 +31,24 @@ for a *conventional* guarantee that a flow doesn't (by construction + review).
 | Relationship to v1 | **New sibling lib.** v1 stays intact + tested for a live A/B of the two architectures. |
 | Launcher rendering | **Static `@switch`** over the selected slug. No registry, no cast, fully `strictTemplates`-checked. |
 | Conditional steps | **Load-time only.** Wizard captures the settled step set on entering the form phase; mid-flow insertion is documented out of scope. |
+| Intro / receipt / error | **Per-flow content slots, required.** Each flow declares `flowIntro` / `flowReceipt` / `flowError` templates; the runner owns the standardized footers + phase machine. No built-in defaults. |
+| Terminal error state | **Load failure + unexpected submit error** are terminal (Error page). 422 server-rejections stay inline-retryable (navigate to step + banner), as today. |
 | Nx generator | **Deferred** to future work (documented in README). |
+
+## Phase model
+
+```
+INTRO ──Start──▶ FORM (steps 1..n) ──submit 200──▶ DONE (receipt)
+  │                   │                              
+  │                   └──submit 422──▶ inline banner on the mapped step (stay in FORM)
+  │                   └──submit 202──▶ MitID redirect ─round-trip─▶ DONE (receipt)
+  │                   └──unexpected submit error──▶ ERROR (terminal)
+  └──env load fails──────────────────────────────▶ ERROR (terminal)
+```
+
+The runner owns the phase signal (`intro | form | done | error`) and the
+**standardized footer** in every phase (Start; Back/Next/Submit; Start-over;
+Try-again). Each flow supplies only the phase **body** via a content slot.
 
 ## Library shape & layout
 
@@ -93,7 +110,7 @@ data. `snapshot`/`restore` ride along — each consumed by the right party (see 
 
 ```ts
 interface FlowConfig<Model> {
-  readonly meta: FlowMeta;            // slug, title, blurb, intro, dimension
+  readonly meta: FlowMeta;            // slug, title, blurb, dimension (intro copy now lives in the flowIntro slot)
   readonly schemaVersion: number;
   toSubmission(model: Model): unknown;
   mapServerError?(e: ServerFieldError, form: FieldTree<Model>):
@@ -103,34 +120,82 @@ interface FlowConfig<Model> {
 }
 ```
 
-Retained unchanged from v1's `flow-def.ts`: `FlowMeta`, the `{ features, terms }`
-envelope types (`FeatureMap`/`FeatureDescriptor`/`TermsMap`/`TermDescriptor`/
-`FlowEnvelope`), `ServerFieldError`, `Signature`, and the `SubmitOutcome` union.
+Retained unchanged from v1's `flow-def.ts`: `FlowMeta` (now without `intro`), the
+`{ features, terms }` envelope types (`FeatureMap`/`FeatureDescriptor`/`TermsMap`/
+`TermDescriptor`/`FlowEnvelope`), `ServerFieldError`, `Signature`, and the
+`SubmitOutcome` union. (`SubmitOk` = the `ok` arm of `SubmitOutcome`, exported for the
+receipt context.)
 
 ### (c) `FlowRunner` shrinks to a shell
 
 ```ts
 @Component({ selector: 'tommy-flow-runner', imports: [NgTemplateOutlet, FlowShell, StepIndicator, ErrorBanner], ... })
 export class FlowRunner {
-  readonly config = input.required<FlowConfig<unknown>>();
-  readonly form   = input.required<FieldTree<unknown>>();   // always defined: author guards on @if (form())
-  readonly resume = input<Signature | null>(null);
-  private readonly steps = contentChildren(FlowStep);        // Signal<readonly FlowStep<unknown>[]>
+  readonly config    = input.required<FlowConfig<unknown>>();
+  readonly form      = input<FieldTree<unknown>>();          // undefined while env loads; only step templates need it
+  readonly loadError = input<string | null>(null);           // flow passes env.error() → drives the terminal Error page
+  readonly resume    = input<Signature | null>(null);
+  readonly retry     = output<void>();                       // Try-again on a load error → flow reloads its env resource
+
+  private readonly steps   = contentChildren(FlowStep);       // Signal<readonly FlowStep<unknown>[]>
+  private readonly intro   = contentChild.required(FlowIntro);
+  private readonly receipt = contentChild.required(FlowReceipt);
+  private readonly errorTpl= contentChild.required(FlowError);
   // …keeps createWizard, the gate, indicator, banner, submit() machine, 202/422 handling…
 }
 ```
 
-- Renders the active step via `ngTemplateOutlet` with context
-  `{ $implicit: step.field(), showErrors: wizard.attempted() }`.
-- The submit state machine (`onSubmit` → `submit(form, { action })` →
-  200/202/422), `placeRejection`, `beginSigning`, and the `adaptState` gate adapter
-  all port over **unchanged in behavior** — only their inputs change (read `config`/
-  `form()` instead of `def()`/`flowForm()`).
-- **One structural change:** `phase` (`intro | form | done`) **lifts out of the
-  wizard onto the runner.** The intro chrome must render without forcing the wizard
-  to build, because the wizard can only capture its step set *after* conditional
-  steps settle (see Conditional steps). The wizard is built lazily, once, on the
-  first transition into the `form` phase.
+- **Phase machine** (`intro | form | done | error`) and the **standardized footer**
+  for every phase are runner-owned. `phase` lives on the runner, **not** inside the
+  wizard — the intro chrome must render before the wizard can capture its (possibly
+  conditional) step set. The wizard is built lazily, once, on the first transition
+  into `form`.
+- **Body comes from a slot, footer is standardized:**
+  - `intro` → projects `flowIntro`; footer = the **Start** button, disabled (with the
+    spinner) until `form()` is defined — preserving "can't start until data loaded"
+    without the runner knowing anything about `env`.
+  - `form` → renders the active step via `ngTemplateOutlet` with context
+    `{ $implicit: step.field(), showErrors: wizard.attempted() }`; footer =
+    Back / Next / Submit (unchanged from v1).
+  - `done` → projects `flowReceipt` with context `{ $implicit: SubmitOk }` (the
+    captured ok outcome, incl. `confirmationId`); footer = **Start over**.
+  - `error` → projects `flowError` with context `{ $implicit: { kind: 'load' | 'submit'; message: string } }`;
+    footer = **Try again** (kind `load` → `retry.emit()` then back to `intro`;
+    kind `submit` → back to `form` at the last step).
+- **Terminal Error triggers:** `loadError()` set (env load failed) → Error(`load`);
+  the unexpected-exception branch of `onSubmit` (the `catch`) → Error(`submit`). A
+  **422** is **not** terminal — it stays inline (navigate to the mapped step + freeze
+  the banner), exactly as v1.
+- The submit state machine (`onSubmit` → `submit(form(), { action })` → 200/202/422),
+  `placeRejection`, `beginSigning`, and the `adaptState` gate adapter port over
+  **unchanged in behavior** — only their inputs change (read `config`/`form()` instead
+  of `def()`/`flowForm()`). On 202 the runner snapshots `form()!.value()`.
+
+### (d) The three presentation slots
+
+Pure-presentation `<ng-template>` content (parallel to `flowStep`), queried by the
+runner and **required** — `contentChild.required` throws at runtime if a flow omits
+one. (Honest caveat: required-ness is a *runtime* guarantee, not compile-time —
+content projection can't be presence-checked by `strictTemplates`. The trade matches
+the "required per flow" decision: every flow visibly declares all three.)
+
+```ts
+@Directive({ selector: 'ng-template[flowIntro]' })   export class FlowIntro {}    // no context — closes over the flow's own signals
+@Directive({ selector: 'ng-template[flowReceipt]' }) export class FlowReceipt {
+  readonly template = inject<TemplateRef<{ $implicit: SubmitOk }>>(TemplateRef);
+  static ngTemplateContextGuard(_d: FlowReceipt, c: unknown): c is { $implicit: SubmitOk } { return true; }
+}
+@Directive({ selector: 'ng-template[flowError]' })   export class FlowError {
+  readonly template = inject<TemplateRef<{ $implicit: FlowErrorInfo }>>(TemplateRef);
+  static ngTemplateContextGuard(_d: FlowError, c: unknown): c is { $implicit: FlowErrorInfo } { return true; }
+}
+export interface FlowErrorInfo { kind: 'load' | 'submit'; message: string; }
+```
+
+`flowIntro` needs **no context** because it is defined in the flow component's own
+template — it can read `env()` (loading/value/error) and any flow signal directly.
+`flowReceipt`/`flowError` carry a context because their data (`SubmitOk`, the error)
+originates in the runner.
 
 ### Deleted by v2
 
@@ -177,34 +242,52 @@ export class BankFlow {
 }
 ```
 
+The runner now mounts **at the top level** (so its intro can render while `env`
+loads); only the **step** templates self-guard on `@if (form())`. The three slots are
+always-projected content:
+
 ```html
-@if (form(); as form) {
-  <flow-runner [config]="config" [form]="form" [resume]="signature">
+<flow-runner [config]="config" [form]="form()" [loadError]="loadErrorMsg()"
+             [resume]="signature" (retry)="env.reload()">
+
+  <ng-template flowIntro>
+    <h2 class="ui-title">Open a bank account</h2>
+    <p class="ui-muted">You'll confirm with MitID before we create it.</p>
+    @if (env.isLoading()) { <p class="ui-muted"><span class="ui-spinner"></span> Loading…</p> }
+  </ng-template>
+
+  @if (form(); as form) {
     <ng-template [flowStep]="form.applicant" flowStepKey="applicant" flowStepLabel="Applicant"
                  let-field let-showErrors="showErrors">
       <tommy-bank-applicant-step [field]="field" [showErrors]="showErrors" />
     </ng-template>
-
     <ng-template [flowStep]="form.account" flowStepKey="account" flowStepLabel="Account"
                  let-field let-showErrors="showErrors">
       <tommy-bank-account-type-step [field]="field" [showErrors]="showErrors" />
     </ng-template>
-
     <ng-template [flowStep]="form.tos" flowStepKey="tos" flowStepLabel="Terms"
                  let-field let-showErrors="showErrors">
       <tommy-tos-step [field]="field" [terms]="env.value()!.terms" [showErrors]="showErrors" />
     </ng-template>
-  </flow-runner>
-} @else if (env.error()) {
-  <!-- retry chrome -->
-} @else {
-  <!-- loading chrome -->
-}
+  }
+
+  <ng-template flowReceipt let-result>
+    <h2 class="ui-title"><span aria-hidden="true">🎉</span> Account opened</h2>
+    <p>Your confirmation id is <strong>{{ result.confirmationId }}</strong>.</p>
+  </ng-template>
+
+  <ng-template flowError let-error>
+    <h2 class="ui-title">We couldn't complete this</h2>
+    <p class="ui-error">{{ error.message }}</p>
+  </ng-template>
+</flow-runner>
 ```
 
+with `protected loadErrorMsg = computed(() => this.env.error() ? 'Could not start this flow. Please retry.' : null)`.
+
 Every binding sits in the flow's own template → `strictTemplates` checks
-`field` / `terms` / `showErrors` against the real component inputs. Full AOT, zero
-erased generics at the seam.
+`field` / `terms` / `showErrors` (and `result.confirmationId` via the receipt context
+guard) against the real component inputs. Full AOT, zero erased generics at the seam.
 
 ### Per-flow refactors (small, mechanical)
 
@@ -217,7 +300,7 @@ erased generics at the seam.
 2. **`TosStep` loses its `data` input.** `readonly data = input.required<TermsMap>()`
    → `readonly terms = input.required<TermsMap>()`; template `@let terms = data()` →
    `terms()`; drop `implements StepComponent`. Bound directly in each flow template
-   as `[terms]="env.value().terms"`.
+   as `[terms]="env.value()!.terms"`.
 3. **Step components drop `implements StepComponent<…>`** and the
    `import … StepComponent` line. They keep their `field` + `showErrors` inputs
    verbatim (those bindings are now strictTemplates-checked at the call site).
@@ -307,13 +390,21 @@ demoed**.
 ## Testing strategy
 
 - **Test host replaces the test flow.** The runner can no longer be driven by
-  `setInput('def', …)` — it needs projected `<ng-template flowStep>`. So
-  `testing/test-flow.ts` becomes `testing/test-host.ts`: a tiny host declaring
-  `<flow-runner [config] [form] [resume]>` with two steps (`#t-name`, `#t-city`).
+  `setInput('def', …)` — it needs projected content. So `testing/test-flow.ts`
+  becomes `testing/test-host.ts`: a tiny host declaring `<flow-runner [config] [form]
+  [loadError] [resume] (retry)>` with two steps (`#t-name`, `#t-city`) **and the three
+  required slots** (`flowIntro`/`flowReceipt`/`flowError`).
 - **Ported runner specs.** Every current `flow-runner.spec` behavior re-expresses
-  through that host: intro renders from meta, Start→first step, Next/Back, gate blocks
-  empty step, submit 200→done, 422→banner, 202→snapshot+same-origin redirect, and
-  resume→done.
+  through that host: intro renders (the `flowIntro` body), Start→first step (Start
+  disabled until `form` set), Next/Back, gate blocks empty step, submit 200→done
+  (the `flowReceipt` body + `confirmationId`), 422→inline banner (stays in form),
+  202→snapshot+same-origin redirect, and resume→done.
+- **New slot + Error-phase specs.** `flowReceipt` receives the ok outcome and renders
+  custom receipt content; `loadError` set → Error page renders the `flowError` body
+  with `kind: 'load'` and `(retry)` fires on Try-again; an unexpected submit exception
+  → Error page with `kind: 'submit'` and Try-again returns to the form; a 422 does
+  **not** reach the Error page (regression guard). `contentChild.required` throws when
+  a slot is omitted.
 - **Ported round-trip spec.** `flows/bank/round-trip.spec` re-expresses on the v2
   shape: `FlowResume` (seeded from a faked single-use snapshot) + `<bank-flow>` +
   runner, with `ExternalRedirect`/`FlowStateStore` seams faked. Still asserts the
@@ -336,8 +427,11 @@ demoed**.
 generics, a shape any Angular dev pattern-matches to the CDK stepper in five seconds.
 
 **Lost:** Nicholas's *runtime* guarantee — an interpreter *cannot* let a flow deviate;
-composition *conventionally doesn't*. Each flow now carries ~40–70 lines of declarative
-repetition (template skeleton + load/form block).
+composition *conventionally doesn't*. Each flow now carries ~60–100 lines of declarative
+repetition (load/form block + the step skeleton + the three required intro/receipt/error
+slots). The required slots raise the per-flow cost over a defaults-based design — the
+deliberate price of "every flow visibly declares its own intro and receipt," and the
+sharpest argument for the deferred generator.
 
 **The answer to the repetition (deferred, documented):**
 1. An Nx generator (`nx g …:flow <name>`) that stamps the canonical component,
