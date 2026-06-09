@@ -1,0 +1,57 @@
+@if (resuming()) {
+  <tommy-flow-shell>
+    <h2 class="ui-title">Completing your MitID signing…</h2>
+    <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Verifying your signature.</p>
+  </tommy-flow-shell>
+} @else {
+  <tommy-flow-shell>
+    @switch (phase()) {
+
+      @case ('intro') {
+        <ng-container [ngTemplateOutlet]="introTpl().template" />
+        <div class="ui-foot">
+          <button type="button" class="ui-btn ui-btn-primary" [disabled]="!form()" [attr.aria-busy]="!form()" (click)="start()">
+            @if (!form()) { <span class="ui-spinner" aria-hidden="true"></span> Loading… } @else { Start }
+          </button>
+        </div>
+      }
+
+      @case ('form') {
+        @let wiz = w();
+        <tommy-step-indicator [labels]="wiz.labels" [activeIndex]="wiz.stepIndex()" />
+        <tommy-error-banner [messages]="wiz.bannerMessages()" />
+        <div #stepRegion tabindex="-1" class="ui-stack">
+          <ng-container [ngTemplateOutlet]="activeStep().template" [ngTemplateOutletContext]="stepContext()" />
+        </div>
+        @if (submitError()) { <p class="ui-error">{{ submitError() }}</p> }
+        <div class="ui-row ui-foot">
+          <button type="button" class="ui-btn" (click)="back()">Back</button>
+          @if (wiz.isLast()) {
+            <button type="button" class="ui-btn ui-btn-primary" [disabled]="submitting()" [attr.aria-busy]="submitting()" (click)="onSubmit()">
+              @if (submitting()) { <span class="ui-spinner" aria-hidden="true"></span> Submitting… } @else { Submit }
+            </button>
+          } @else {
+            <button type="button" class="ui-btn ui-btn-primary" (click)="next()">Next</button>
+          }
+        </div>
+      }
+
+      @case ('done') {
+        @if (result(); as r) {
+          <ng-container [ngTemplateOutlet]="receiptTpl().template" [ngTemplateOutletContext]="{ $implicit: r }" />
+        }
+        <div class="ui-foot">
+          <button type="button" class="ui-btn" (click)="reset()">Start over</button>
+        </div>
+      }
+
+      @case ('error') {
+        <h2 class="ui-title">We couldn't complete this</h2>
+        <p class="ui-error">{{ errorInfo()?.message }}</p>
+        <div class="ui-foot">
+          <button type="button" class="ui-btn ui-btn-primary" (click)="tryAgain()">Try again</button>
+        </div>
+      }
+    }
+  </tommy-flow-shell>
+}
