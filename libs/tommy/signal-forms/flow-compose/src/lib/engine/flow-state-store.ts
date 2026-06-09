@@ -17,7 +17,7 @@ export interface FlowSnapshot {
  *
  * Caveat: the snapshot is JSON round-tripped through sessionStorage, so `model` must be plain
  * JSON-serializable (no Date/Map/undefined/cyclic refs); a flow whose model isn't JSON-safe
- * should provide `FlowDef.snapshot()`/`restore()` hooks.
+ * should provide `FlowConfig.snapshot()`/`restore()` hooks.
  */
 @Injectable({ providedIn: 'root' })
 export class FlowStateStore {
