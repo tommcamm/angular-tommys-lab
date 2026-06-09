@@ -23,7 +23,6 @@
         <div #stepRegion tabindex="-1" class="ui-stack">
           <ng-container [ngTemplateOutlet]="activeStep().template" [ngTemplateOutletContext]="stepContext()" />
         </div>
-        @if (submitError()) { <p class="ui-error">{{ submitError() }}</p> }
         <div class="ui-row ui-foot">
           <button type="button" class="ui-btn" (click)="back()">Back</button>
           @if (wiz.isLast()) {

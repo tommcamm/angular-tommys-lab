@@ -47,7 +47,6 @@ export class FlowRunner {
   protected readonly phase = signal<Phase>('intro');
   protected readonly errorInfo = signal<ErrorInfo | null>(null);
   protected readonly result = signal<SubmitOk | null>(null);
-  protected readonly submitError = signal<string | null>(null);
   protected readonly submitting = signal(false);
 
   /** During a MitID resume, show the "completing signing" screen (mirrors v1). */
@@ -112,13 +111,11 @@ export class FlowRunner {
   }
 
   next(): void {
-    this.submitError.set(null);
     const state = this.currentStepState();
     if (state) this.ensureWizard().next(state);
   }
 
   back(): void {
-    this.submitError.set(null);
     const w = this.ensureWizard();
     if (w.isFirst()) this.phase.set('intro');
     else w.back();
@@ -131,7 +128,6 @@ export class FlowRunner {
     const state = this.currentStepState();
     if (!state || !w.validateCurrent(state)) return;
 
-    this.submitError.set(null);
     this.result.set(null);
     this.submitting.set(true);
 
@@ -182,7 +178,6 @@ export class FlowRunner {
     this.phase.set('intro');
     this.result.set(null);
     this.errorInfo.set(null);
-    this.submitError.set(null);
     this.submitting.set(false);
     this.resumeFired = false;
     this.wizard?.reset();

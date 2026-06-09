@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injector, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormField, form, required, schema, type FieldTree } from '@angular/forms/signals';
 import type { Signature } from '../flow-types';
 import type { FlowConfig } from '../flow-config';
@@ -42,7 +42,6 @@ const TEST_SCHEMA = schema<TestModel>((p) => {
   `,
 })
 export class TestHost {
-  private readonly injector = inject(Injector);
   readonly config = TEST_CONFIG;
   readonly model = signal<TestModel>({ one: { name: '' }, two: { city: '' } });
   /** form() returns undefined until `formReady` is true (simulates env loading). */
