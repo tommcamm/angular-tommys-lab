@@ -22,6 +22,9 @@
       ],
       "@tommy/signal-forms/flow-forge": [
         "./libs/tommy/signal-forms/flow-forge/src/index.ts"
+      ],
+      "@tommy/signal-forms/flow-compose": [
+        "./libs/tommy/signal-forms/flow-compose/src/index.ts"
       ]
     }
   },
