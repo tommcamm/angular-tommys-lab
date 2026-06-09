@@ -37,6 +37,32 @@ describe('FlowCompose launcher', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('tommy-newsletter-flow')).not.toBeNull();
   });
 
+  it('an approved MitID callback auto-selects the flow with no resubmit notice', () => {
+    TestBed.configureTestingModule({
+      imports: [FlowCompose],
+      providers: [
+        FlowResume,
+        FlowStateStore,
+        {
+          provide: ActivatedRoute,
+          useValue: routeWith({ mitid: 'callback', flow: 'bank', status: 'approved', state: 'st-1', code: 'otc' }),
+        },
+      ],
+    });
+    TestBed.inject(FlowStateStore).save({
+      flowSlug: 'bank',
+      schemaVersion: 1,
+      state: 'st-1',
+      challengeId: 'c',
+      model: {},
+    });
+    const fixture = TestBed.createComponent(FlowCompose);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('tommy-bank-flow')).not.toBeNull();
+    expect(el.querySelector('[role=status]')).toBeNull(); // no notice on the approved path
+  });
+
   it('a cancelled MitID callback auto-selects the flow and shows the resubmit notice', () => {
     TestBed.configureTestingModule({
       imports: [FlowCompose],

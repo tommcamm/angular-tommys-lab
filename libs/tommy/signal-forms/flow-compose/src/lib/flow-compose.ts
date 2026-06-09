@@ -38,6 +38,7 @@ export class FlowCompose {
     this.selected.set(slug);
   }
   clear(): void {
+    this.returnNotice.set(null);
     this.selected.set(null);
   }
   badgeClass(dimension: string): string {
