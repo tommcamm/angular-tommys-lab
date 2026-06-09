@@ -49,13 +49,17 @@ export class FlowRunner {
   protected readonly result = signal<SubmitOk | null>(null);
   protected readonly submitting = signal(false);
 
-  /** During a MitID resume, show the "completing signing" screen (mirrors v1). */
-  protected readonly resuming = computed(
-    () => !!this.resume() && this.phase() !== 'done' && this.phase() !== 'error',
-  );
+  /**
+   * During a MitID resume, show the "completing signing" screen (mirrors v1).
+   * A writable signal (not a computed over `resume()`) so it is owned by the resume
+   * effect: set true when the re-submit starts, false when it settles. This keeps
+   * `reset()` ("Start over") from re-deriving `true` while `resume()` is still truthy.
+   */
+  protected readonly resuming = signal(false);
 
   private readonly stepRegion = viewChild<ElementRef<HTMLElement>>('stepRegion');
-  private resumeFired = false;
+  /** A resume fires AT MOST ONCE per component lifetime; `reset()` must NOT re-arm it. */
+  private resumeConsumed = false;
   private wizard: Wizard | null = null;
 
   /** Build ONCE on first form-entry, from the settled (post-load) step set. */
@@ -87,13 +91,14 @@ export class FlowRunner {
       const sig = this.resume();
       const f = this.form();
       const ready = this.steps().length > 0;
-      if (!sig || !f || !ready || this.resumeFired) return;
-      this.resumeFired = true;
+      if (!sig || !f || !ready || this.resumeConsumed) return;
+      this.resumeConsumed = true; // permanent latch: reset() does NOT clear it
       untracked(() => {
         this.phase.set('form');
         const w = this.ensureWizard();
         w.stepIndex.set(this.steps().length - 1);
-        void this.onSubmit(sig);
+        this.resuming.set(true);
+        void this.onSubmit(sig).finally(() => this.resuming.set(false));
       });
     });
 
@@ -179,7 +184,6 @@ export class FlowRunner {
     this.result.set(null);
     this.errorInfo.set(null);
     this.submitting.set(false);
-    this.resumeFired = false;
     this.wizard?.reset();
   }
 

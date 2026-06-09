@@ -171,4 +171,37 @@ describe('FlowRunner — resume', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('All set — SIGNED-1');
   });
+
+  it('resume → done → Start over → shows intro and does NOT re-submit', async () => {
+    let submitCount = 0;
+    const submit: FlowFixture['submit'] = (_p, sig) => {
+      submitCount++;
+      return sig
+        ? ({ status: 'ok', httpStatus: 200, confirmationId: 'SIGNED-1' } as const)
+        : ({ status: 'signing_required', httpStatus: 202, signingUrl: 'https://idp/x', challengeId: 'c' } as const);
+    };
+    const { fixture } = configure(submit);
+    // Drive a resume to done (mirrors the resume test above).
+    fixture.componentInstance.model.set({ one: { name: 'Tom' }, two: { city: 'CPH' } });
+    fixture.componentInstance.resume.set({ challengeId: 'c', code: 'otc-1' });
+    fixture.detectChanges();
+    await new Promise((r) => setTimeout(r, 700)); // submit(500) real delay
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('All set — SIGNED-1'); // reached done
+    expect(submitCount).toBe(1); // exactly one signed submission so far
+
+    // Click "Start over" — must return to intro WITHOUT re-firing the signed submit.
+    clickByText(fixture, 'Start over');
+    await new Promise((r) => setTimeout(r, 700)); // give any (erroneous) re-submit time to fire
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(el.textContent).toContain('intro copy'); // back on the intro
+    expect(el.textContent).not.toContain('Completing your MitID signing'); // no resume overlay
+    expect(el.textContent).not.toContain('All set — SIGNED-1'); // receipt gone
+    expect(submitCount).toBe(1); // ← the proof: NO second submission
+  });
 });

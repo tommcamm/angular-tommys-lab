@@ -38,6 +38,24 @@ class SlotRunner {
 })
 class SlotHost {}
 
+/** Minimal runner whose only contract is a REQUIRED flowIntro slot. */
+@Component({
+  selector: 'tommy-required-intro-runner',
+  template: `<ng-container [ngTemplateOutlet]="intro().template" />`,
+  imports: [NgTemplateOutlet],
+})
+class RequiredIntroRunner {
+  readonly intro = contentChild.required(FlowIntro);
+}
+
+/** Host that omits the required flowIntro slot — must throw at creation. */
+@Component({
+  selector: 'tommy-missing-intro-host',
+  imports: [RequiredIntroRunner],
+  template: `<tommy-required-intro-runner />`,
+})
+class MissingIntroHost {}
+
 describe('Flow slots', () => {
   it('projects intro body and receipt body with the ok outcome', () => {
     const fixture = TestBed.createComponent(SlotHost);
@@ -45,5 +63,12 @@ describe('Flow slots', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('#intro')?.textContent).toBe('hello');
     expect(el.querySelector('#rcpt')?.textContent).toBe('OK-1');
+  });
+
+  it('throws when a required slot (flowIntro) is omitted', () => {
+    expect(() => {
+      const fixture = TestBed.createComponent(MissingIntroHost);
+      fixture.detectChanges();
+    }).toThrow();
   });
 });

@@ -13,8 +13,9 @@ type Cached =
 
 /**
  * Single-read front for the single-use MitID snapshot. The launcher calls `consume`
- * once on boot; the flow component and runner then read the cached result freely (the
- * replay risk lived in sessionStorage — once validated into memory it is plain state).
+ * once on boot (the sole reader of sessionStorage). The auto-selected flow then reads
+ * `pending(slug)` once to seed its restored model + signature; `pending` is SINGLE-USE,
+ * so manually re-selecting a flow starts it fresh rather than re-resuming a signed request.
  */
 @Injectable({ providedIn: 'root' })
 export class FlowResume {
@@ -60,11 +61,17 @@ export class FlowResume {
     return cb.flow;
   }
 
-  /** In-memory, multi-read. The pending resume for a slug (approved only). */
+  /**
+   * The pending resume for a slug (approved only). SINGLE-USE: the auto-selected flow
+   * reads it once (a field initializer) to seed its restored model + signature. Clearing
+   * the cache here means re-selecting the same flow later starts it fresh — no stale
+   * re-resume of an already-signed request.
+   */
   pending(slug: string): PendingResume | null {
-    return this.cached?.slug === slug && this.cached.status === 'approved'
-      ? this.cached.pending
-      : null;
+    if (this.cached?.slug !== slug || this.cached.status !== 'approved') return null;
+    const p = this.cached.pending;
+    this.cached = null; // single-use: a re-selected flow starts fresh, no stale re-resume
+    return p;
   }
 
   /** True only after a valid `cancelled` callback for this slug. */

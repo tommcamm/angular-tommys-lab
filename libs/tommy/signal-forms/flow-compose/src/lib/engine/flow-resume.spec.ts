@@ -20,15 +20,15 @@ describe('FlowResume', () => {
   });
   afterEach(() => sessionStorage.clear());
 
-  it('approved callback with matching state → slug + pending (multi-read)', () => {
+  it('approved callback with matching state → slug + pending (SINGLE-USE)', () => {
     saveSnapshot('st-1');
     const r = TestBed.inject(FlowResume);
     const slug = r.consume(qmap({ mitid: 'callback', flow: 'bank', status: 'approved', state: 'st-1', code: 'otc' }), VERSION);
     expect(slug).toBe('bank');
     const a = r.pending('bank');
-    const b = r.pending('bank');
     expect(a).toEqual({ model: { a: 1 }, signature: { challengeId: 'ch-1', code: 'otc' } });
-    expect(b).toEqual(a); // multi-read
+    // Single-use: a re-selected flow re-reads pending and must start fresh (no stale re-resume).
+    expect(r.pending('bank')).toBeNull();
     expect(r.cancelledNotice('bank')).toBe(false);
   });
 

@@ -110,13 +110,14 @@ No `buildForm`, no `steps[]`. Those live in the flow template now.
 ### `FlowResume`
 
 A single-read service (provided in root). On boot, `FlowCompose` calls
-`resume.consume(route.snapshot.queryParamMap, versionFn)` — the *only* reader of the
-single-use `FlowStateStore` snapshot — which reads + clears it if the `state` nonce and
-schema version match, then caches the validated result in memory. Each flow then calls
-`resume.pending(slug)` (in-memory, multi-read) to check whether its model + signature
-are waiting. The single-use risk lived in `sessionStorage`; once validated into memory
-the cache is read freely by both the flow component (restores the model) and the runner
-(re-submits the signature).
+`resume.consume(route.snapshot.queryParamMap, versionFn)` — `consume()` is the *single
+reader* of the `sessionStorage` snapshot: it reads + clears the store if the `state`
+nonce and schema version match, then caches the validated result in memory. The
+auto-selected flow then calls `resume.pending(slug)`, read **once** by that flow's field
+initializer to seed its restored model + a deferred `signature` (the runner re-submits
+that signature via its `[resume]` input, *not* via `pending()`). `pending(slug)` is
+**SINGLE-USE** — it clears the cached entry on return — so manually re-selecting a flow
+later starts it **fresh** rather than re-resuming an already-signed request.
 
 ## How to add a flow
 
