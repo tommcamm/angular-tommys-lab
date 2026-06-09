@@ -1,0 +1,54 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-09-flow-compose-v2.md",
+  "tasks": [
+    {
+      "id": 1,
+      "subject": "Task 1: Scaffold flow-compose lib + copy unchanged engine/ui parts",
+      "status": "pending",
+      "description": "Generate tommy-signal-forms-flow-compose (vitest, scope:tommy tags), add the tsconfig.base path, create flow-types.ts (trimmed v1 flow-def), copy verbatim external-redirect + ui/*, copy flow-backend + schema-helpers redirecting ./flow-def→./flow-types, copy mitid (return path /flow-compose), flow-state-store (KEY flow-compose:snapshot), and wizard with `phase` removed (+ adjusted wizard.spec).\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/\", \"tsconfig.base.json\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-types.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/wizard.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose\", \"acceptanceCriteria\": [\"lint passes\", \"copied specs pass\", \"wizard has no phase\", \"no import from flow-forge\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Define the contract surface: FlowStep directive + FlowConfig",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "Create flow-config.ts (FlowConfig<Model>), flow-step.ts (FlowStep + FlowStepContext + guard, aliases flowStep/Key/Label), flow-slots.ts (FlowIntro exposing template + FlowReceipt with {$implicit: SubmitOk}; no FlowError). flow-types.ts already exists from Task 1. Specs: flow-step.spec, flow-slots.spec.\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-config.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-step.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-slots.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-step.spec.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-slots.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose --testPathPattern=\\\"flow-step|flow-slots\\\"\", \"acceptanceCriteria\": [\"FlowStep aliases + guard\", \"FlowIntro/FlowReceipt directives with template + receipt context\", \"specs pass\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Rewrite FlowRunner as a content-querying shell",
+      "status": "pending",
+      "blockedBy": [1, 2],
+      "description": "Write flow-runner.ts + .html (phase machine intro|form|done|error, standardized footers, lazy wizard from contentChildren(FlowStep), intro/receipt slots via contentChild.required, built-in error page, submit state machine, resume effect), testing/test-host.ts, and flow-runner.spec.ts (phases/gate/200/422/202/error/resume).\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-runner.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-runner.html\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/testing/test-host.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-runner.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose --testPathPattern=flow-runner\", \"acceptanceCriteria\": [\"four phases render correct body+footer\", \"gate + 200/422/202 preserved (422 inline)\", \"load+submit error pages + retry behavior\", \"resume re-submits to done\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Build the FlowResume single-read service",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "Create resume.ts (PendingResume DTO) and flow-resume.ts (FlowResume: consume = sole parseCallback+store.restore reader validating state nonce + schemaVersion; pending = multi-read approved-only; cancelledNotice). Spec covers approved/cancelled/replay/no-callback/unknown-slug.\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/lib/engine/resume.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-resume.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/engine/flow-resume.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose --testPathPattern=flow-resume\", \"acceptanceCriteria\": [\"consume sole reader, validates state+version\", \"pending multi-read approved-only\", \"cancelledNotice on cancelled\", \"replay/no-callback/unknown-slug yield null\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Port the three flows as components (newsletter, bank, insurance)",
+      "status": "pending",
+      "blockedBy": [2, 3, 4],
+      "description": "Per flow: write <name>-flow.ts + .html (runner top-level, steps under @if(form()), flowIntro/flowReceipt slots, [loadError] + (retry)=env.reload()), <name>-config.ts, form.ts builder; copy model.ts (split emptyModel→env-free skeleton with tos:[]), schema/fixtures (redirect ./flow-def→./flow-types), steps/* (drop implements StepComponent); copy shared tos-step.ts (data→terms). Port bank round-trip spec (drive <bank-flow>, FlowResume.consume for phase B; assert BANK-bank-0001).\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/lib/flows/\", \"libs/tommy/signal-forms/flow-compose/src/lib/steps/tos-step.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/flows/bank/round-trip.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose --testPathPattern=\\\"flows/\\\"\", \"acceptanceCriteria\": [\"flows render intro/steps/receipt + tos seeding + load-error page\", \"TosStep terms input, steps drop StepComponent\", \"bank round-trip → BANK-bank-0001\", \"schema/fixtures specs pass\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: Build the @switch launcher + FLOW_CARDS + boot consume",
+      "status": "pending",
+      "blockedBy": [4, 5],
+      "description": "Write flow-fixtures.ts (FLOW_FIXTURES_MAP), flow-cards.ts (FLOW_CARDS + FLOW_VERSIONS), flow-compose.ts (consume on boot, selected signal, co-provide FLOW_FIXTURES+FlowBackend), flow-compose.html (@switch over slug + gallery), flow-compose.spec.ts (gallery lists, click renders, cancelled callback).\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/lib/flow-compose.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/flow-compose.html\", \"libs/tommy/signal-forms/flow-compose/src/lib/flow-cards.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/flow-fixtures.ts\", \"libs/tommy/signal-forms/flow-compose/src/lib/flow-compose.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose --testPathPattern=flow-compose\", \"acceptanceCriteria\": [\"gallery + @switch render flows\", \"backend+fixtures co-provided\", \"auto-resume + cancelled notice on boot\", \"no registry cast\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: Tests, AOT gate, README ledger, public API",
+      "status": "pending",
+      "blockedBy": [3, 5, 6],
+      "description": "Write index.ts (export FlowCompose, FlowRunner, FlowStep, FlowIntro, FlowReceipt, FlowConfig + public types; no FlowError). Register flow-compose in apps/tommy/host registry (lazy m.FlowCompose) and update experiment.spec slug order. Run `pnpm nx build tommy-host` (AOT strictTemplates gate). Write README ledger. Full lib + host green.\n\n```json:metadata\n{\"files\": [\"libs/tommy/signal-forms/flow-compose/src/index.ts\", \"libs/tommy/signal-forms/flow-compose/README.md\", \"apps/tommy/host/src/app/experiments/registry.ts\", \"apps/tommy/host/src/app/experiments/experiment.spec.ts\"], \"verifyCommand\": \"pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host && pnpm nx test tommy-host\", \"acceptanceCriteria\": [\"index exports public surface (no FlowError)\", \"host registered + experiment.spec updated\", \"nx build tommy-host AOT passes\", \"all lib + host tests green\", \"README ledger documented\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-09T00:00:00Z"
+}
