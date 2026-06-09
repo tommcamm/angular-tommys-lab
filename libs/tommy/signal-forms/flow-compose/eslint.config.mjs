@@ -34,6 +34,9 @@ export default [
     rules: {
       '@angular-eslint/directive-selector': 'off',
       '@angular-eslint/no-input-rename': 'off',
+      // The ngTemplateContextGuard `_ctx` param is used only in its type predicate,
+      // which tseslint counts as unused — honour the leading-underscore convention.
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
   {
