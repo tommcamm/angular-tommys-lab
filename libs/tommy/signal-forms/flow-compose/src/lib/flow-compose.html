@@ -1,0 +1,30 @@
+@if (selected(); as slug) {
+  @if (returnNotice(); as notice) {
+    <p class="ui-banner-warning" role="status">{{ notice }}</p>
+  }
+  <button type="button" class="ui-btn ui-foot" (click)="clear()">← All flows</button>
+  @switch (slug) {
+    @case ('newsletter') { <tommy-newsletter-flow /> }
+    @case ('bank') { <tommy-bank-flow /> }
+    @case ('insurance') { <tommy-insurance-flow /> }
+  }
+} @else {
+  <header class="ui-stack">
+    <h2 class="ui-title">Flow Compose</h2>
+    <p class="ui-muted">
+      Composition over interpretation: each flow is a component that composes the
+      runner. Pick a flow to run it.
+    </p>
+  </header>
+  <ul class="ui-gallery">
+    @for (card of cards; track card.slug) {
+      <li>
+        <button type="button" class="ui-flow-card" [attr.data-flow]="card.slug" (click)="select(card.slug)">
+          <span class="ui-badge" [class]="badgeClass(card.dimension)">{{ card.dimension }}</span>
+          <strong class="ui-title">{{ card.title }}</strong>
+          <span class="ui-muted">{{ card.blurb }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+}
