@@ -1,0 +1,29 @@
+<tommy-flow-runner [config]="config" [form]="form()" [loadError]="loadErrorMsg()"
+                   [resume]="signature()" (retry)="env.reload()">
+
+  <ng-template flowIntro>
+    <h2 class="ui-title">Subscribe to the newsletter</h2>
+    <p class="ui-muted">Pick how often you want to hear from us. Quick and simple.</p>
+    @if (env.isLoading()) { <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Loading options…</p> }
+  </ng-template>
+
+  @if (form(); as form) {
+    <ng-template [flowStep]="form.contact" flowStepKey="contact" flowStepLabel="Contact"
+                 let-field let-showErrors="showErrors">
+      <tommy-newsletter-contact-step [field]="field" [showErrors]="showErrors" />
+    </ng-template>
+    <ng-template [flowStep]="form.prefs" flowStepKey="prefs" flowStepLabel="Preferences"
+                 let-field let-showErrors="showErrors">
+      <tommy-newsletter-prefs-step [field]="field" [showErrors]="showErrors" />
+    </ng-template>
+    <ng-template [flowStep]="form.tos" flowStepKey="tos" flowStepLabel="Terms"
+                 let-field let-showErrors="showErrors">
+      <tommy-tos-step [field]="field" [terms]="env.value()!.terms" [showErrors]="showErrors" />
+    </ng-template>
+  }
+
+  <ng-template flowReceipt let-result>
+    <h2 class="ui-title">You're subscribed</h2>
+    <p>Your confirmation id is <strong>{{ result.confirmationId }}</strong>.</p>
+  </ng-template>
+</tommy-flow-runner>

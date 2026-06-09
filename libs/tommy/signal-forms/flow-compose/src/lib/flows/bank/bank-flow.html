@@ -1,0 +1,29 @@
+<tommy-flow-runner [config]="config" [form]="form()" [loadError]="loadErrorMsg()"
+                   [resume]="signature()" (retry)="env.reload()">
+
+  <ng-template flowIntro>
+    <h2 class="ui-title">Open a bank account</h2>
+    <p class="ui-muted">Open a new account. You will confirm with MitID before we create it.</p>
+    @if (env.isLoading()) { <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Loading options…</p> }
+  </ng-template>
+
+  @if (form(); as form) {
+    <ng-template [flowStep]="form.applicant" flowStepKey="applicant" flowStepLabel="Applicant"
+                 let-field let-showErrors="showErrors">
+      <tommy-bank-applicant-step [field]="field" [showErrors]="showErrors" />
+    </ng-template>
+    <ng-template [flowStep]="form.account" flowStepKey="account" flowStepLabel="Account"
+                 let-field let-showErrors="showErrors">
+      <tommy-bank-account-type-step [field]="field" [showErrors]="showErrors" />
+    </ng-template>
+    <ng-template [flowStep]="form.tos" flowStepKey="tos" flowStepLabel="Terms"
+                 let-field let-showErrors="showErrors">
+      <tommy-tos-step [field]="field" [terms]="env.value()!.terms" [showErrors]="showErrors" />
+    </ng-template>
+  }
+
+  <ng-template flowReceipt let-result>
+    <h2 class="ui-title"><span aria-hidden="true">🎉</span> Account opened</h2>
+    <p>Your confirmation id is <strong>{{ result.confirmationId }}</strong>.</p>
+  </ng-template>
+</tommy-flow-runner>
