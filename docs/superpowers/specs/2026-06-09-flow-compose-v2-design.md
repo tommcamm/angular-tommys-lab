@@ -161,15 +161,17 @@ export class BankFlow {
     this.pending ? (BANK_FLOW_CONFIG.restore?.(this.pending.model) ?? this.pending.model as BankModel)
                  : emptyBankSkeleton());
   protected readonly form   = computed(() =>
-    this.env.hasValue() ? bankForm(this.model, this.env.value()) : undefined);
+    this.env.hasValue() ? bankForm(this.model, this.env.value()!) : undefined);
   protected readonly signature = this.pending?.signature ?? null;
 
   constructor() {
     // Seed env-derived defaults (only the tos[] array) once env resolves — but NOT
     // when resuming (the restored model already carries the user's tos answers).
+    // (`resource().value()` is typed `T | undefined` even after `hasValue()`, so the
+    // non-null assertion is required — TS does not narrow the method's result.)
     effect(() => {
       if (this.pending || !this.env.hasValue()) return;
-      this.model.update((m) => ({ ...m, tos: tosAcksFrom(this.env.value().terms) }));
+      this.model.update((m) => ({ ...m, tos: tosAcksFrom(this.env.value()!.terms) }));
     });
   }
 }
@@ -190,7 +192,7 @@ export class BankFlow {
 
     <ng-template [flowStep]="form.tos" flowStepKey="tos" flowStepLabel="Terms"
                  let-field let-showErrors="showErrors">
-      <tommy-tos-step [field]="field" [terms]="env.value().terms" [showErrors]="showErrors" />
+      <tommy-tos-step [field]="field" [terms]="env.value()!.terms" [showErrors]="showErrors" />
     </ng-template>
   </flow-runner>
 } @else if (env.error()) {
