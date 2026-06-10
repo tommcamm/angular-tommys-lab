@@ -426,7 +426,7 @@ demoed**.
 + unchecked inputs, and the whole Risks-#1 class. Full AOT coverage, zero erased
 generics, a shape any Angular dev pattern-matches to the CDK stepper in five seconds.
 
-**Lost:** Nicholas's *runtime* guarantee — an interpreter *cannot* let a flow deviate;
+**Lost:** Flow Forge's *runtime* guarantee — an interpreter *cannot* let a flow deviate;
 composition *conventionally doesn't*. Each flow now carries ~55–90 lines of declarative
 repetition (load/form block + the step skeleton + the two required intro/receipt slots).
 The required slots raise the per-flow cost over a defaults-based design — the deliberate

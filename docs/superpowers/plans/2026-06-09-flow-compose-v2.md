@@ -1782,7 +1782,7 @@ Expected: SUCCESS. This compiles `<tommy-flow-compose>` and every flow template 
 
 Include: the principle (compose engine parts, CDK-stepper shape); the contract (`FlowRunner`, `FlowStep`, `FlowIntro`/`FlowReceipt`, `FlowConfig`); how to add a flow (component + form builder + config + steps + slots, register the card + fixture + version + host entry); and **the ledger** verbatim in spirit:
 - Gained — concede out loud: strictly better-typed than Flow Forge; deleted `StepDef`/`defineStep`/`StepComponent`/the registry cast/`NgComponentOutlet`/the unchecked-inputs risk class.
-- Lost — Nicholas's runtime guarantee (interpreter *can't* deviate) for a conventional one (composition *doesn't*); ~55–90 lines of per-flow repetition from the two required slots + load/form block (the error page is free, runner-owned chrome).
+- Lost — Flow Forge's runtime guarantee (interpreter *can't* deviate) for a conventional one (composition *doesn't*); ~55–90 lines of per-flow repetition from the two required slots + load/form block (the error page is free, runner-owned chrome).
 - Deferred — the Nx `flows:flow` generator and a shared `flow-core` extraction.
 Mention the MitID round-trip is seam-tested in `flows/bank/round-trip.spec.ts` and the true cross-origin hop is manual via the host + `mock-idp` apps (v2 route `/flow-compose`).
 

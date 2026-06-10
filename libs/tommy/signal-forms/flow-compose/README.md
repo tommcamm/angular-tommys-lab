@@ -211,7 +211,7 @@ Flow Compose is **strictly better-typed than Flow Forge**. The improvements are 
 
 ### Lost
 
-Nicholas's *runtime* guarantee — an interpreter *cannot* let a registered flow deviate
+Flow Forge's *runtime* guarantee — an interpreter *cannot* let a registered flow deviate
 from the contract — is traded for a *conventional* one: a flow component *doesn't*
 deviate by construction and review. No code prevents an author from wiring a step
 to the wrong slice; the compiler and tests do.
