@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Injector, signal } from '@angular/core';
 import type { FlowEnvelope } from '../../flow-types';
-import { newsletterForm } from './form';
+import { buildFlowForm } from '../../forms/build-flow-form';
+import { newsletterSchema } from './schema';
 import { emptyNewsletterModel } from './model';
 import { tosAcksFrom } from '../../steps/tos-step';
 
@@ -15,7 +16,7 @@ const env: FlowEnvelope = {
 
 function build() {
   const model = signal({ ...emptyNewsletterModel(), tos: tosAcksFrom(env.terms) });
-  const form = newsletterForm(model, env, TestBed.inject(Injector));
+  const form = buildFlowForm(model, newsletterSchema, env, TestBed.inject(Injector));
   return { model, form };
 }
 

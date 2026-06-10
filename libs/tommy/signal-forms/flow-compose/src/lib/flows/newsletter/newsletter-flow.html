@@ -1,13 +1,13 @@
-<tommy-flow-runner [config]="config" [form]="form()" [loadError]="loadErrorMsg()"
-                   [resume]="signature()" (retry)="env.reload()">
+<tommy-flow-runner [config]="flow.config" [form]="flow.form()" [loadError]="flow.loadErrorMsg()"
+                   [resume]="flow.signature()" (retry)="flow.env.reload()">
 
   <ng-template flowIntro>
     <h2 class="ui-title">Subscribe to the newsletter</h2>
     <p class="ui-muted">Pick how often you want to hear from us. Quick and simple.</p>
-    @if (env.isLoading()) { <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Loading options…</p> }
+    @if (flow.env.isLoading()) { <p class="ui-muted"><span class="ui-spinner" aria-hidden="true"></span> Loading options…</p> }
   </ng-template>
 
-  @if (form(); as form) {
+  @if (flow.form(); as form) {
     <ng-template [flowStep]="form.contact" flowStepKey="contact" flowStepLabel="Contact"
                  let-field let-showErrors="showErrors">
       <tommy-newsletter-contact-step [field]="field" [showErrors]="showErrors" />
@@ -18,7 +18,7 @@
     </ng-template>
     <ng-template [flowStep]="form.tos" flowStepKey="tos" flowStepLabel="Terms"
                  let-field let-showErrors="showErrors">
-      <tommy-tos-step [field]="field" [terms]="env.value()!.terms" [showErrors]="showErrors" />
+      <tommy-tos-step [field]="field" [terms]="flow.env.value()!.terms" [showErrors]="showErrors" />
     </ng-template>
   }
 

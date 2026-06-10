@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { Injector, signal } from '@angular/core';
 import type { FlowEnvelope } from '../../flow-types';
 import type { InsuranceFeatures } from './fixtures';
-import { insuranceForm } from './form';
+import { buildFlowForm } from '../../forms/build-flow-form';
+import { insuranceSchema } from './schema';
 import { emptyInsuranceModel } from './model';
 import { tosAcksFrom } from '../../steps/tos-step';
 
@@ -17,7 +18,7 @@ const env: FlowEnvelope<InsuranceFeatures> = {
 
 function build() {
   const model = signal({ ...emptyInsuranceModel(), tos: tosAcksFrom(env.terms) });
-  const form = insuranceForm(model, env, TestBed.inject(Injector));
+  const form = buildFlowForm(model, insuranceSchema, env, TestBed.inject(Injector));
   return { model, form };
 }
 
