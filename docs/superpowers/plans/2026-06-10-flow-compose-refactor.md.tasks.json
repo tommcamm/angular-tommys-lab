@@ -4,34 +4,34 @@
     {
       "id": 1,
       "subject": "Task 1: Relocate engine/ → runner/io/forms + root; fix imports",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Move the 14 engine/ files into runner/io/forms + root flow-types.ts, merge resume.ts's PendingResume into io/flow-resume.ts, re-path every import. No logic changes.\n\n**Verify:** pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host; grep -rn \"engine/\" libs/tommy/signal-forms/flow-compose → empty\n\n```json:metadata\n{\"files\":[\"libs/tommy/signal-forms/flow-compose/src/lib/engine/\",\"libs/tommy/signal-forms/flow-compose/src/index.ts\"],\"verifyCommand\":\"pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host\",\"acceptanceCriteria\":[\"engine/ removed, files under runner/io/forms + root\",\"grep engine/ empty\",\"existing specs pass + AOT green\",\"no source logic changed\"]}\n```"
     },
     {
       "id": 2,
       "subject": "Task 2: Add forms/build-flow-form.ts (kills runInInjectionContext)",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [1],
       "description": "**Goal:** Generic helper building form() via the { injector } option inside untracked, with a spec proving it works inside a computed. Export from barrel.\n\n**Verify:** pnpm nx test tommy-signal-forms-flow-compose → build-flow-form specs pass; pnpm nx build tommy-host → green\n\n```json:metadata\n{\"files\":[\"libs/tommy/signal-forms/flow-compose/src/lib/forms/build-flow-form.ts\",\"libs/tommy/signal-forms/flow-compose/src/lib/forms/build-flow-form.spec.ts\",\"libs/tommy/signal-forms/flow-compose/src/index.ts\"],\"verifyCommand\":\"pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host\",\"acceptanceCriteria\":[\"buildFlowForm returns usable FieldTree\",\"works inside a computed without throwing\",\"exported from index.ts\",\"new spec + suite + AOT green\"]}\n```"
     },
     {
       "id": 3,
       "subject": "Task 3: Add create-flow.ts composable",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [2],
       "description": "**Goal:** One composable absorbing env-resource + model + form + loadErrorMsg + signature-deferral + seedDefaults wiring (same logic, hoisted once). Export from barrel.\n\n**Verify:** pnpm nx test tommy-signal-forms-flow-compose → create-flow specs pass; pnpm nx build tommy-host → green\n\n```json:metadata\n{\"files\":[\"libs/tommy/signal-forms/flow-compose/src/lib/create-flow.ts\",\"libs/tommy/signal-forms/flow-compose/src/lib/create-flow.spec.ts\",\"libs/tommy/signal-forms/flow-compose/src/index.ts\"],\"verifyCommand\":\"pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host\",\"acceptanceCriteria\":[\"fresh start seeds emptyModel then builds form + seedDefaults\",\"resume restores model, skips seedDefaults, sets signature\",\"load failure maps loadErrorMsg, form undefined\",\"exported from index; suite + AOT green\"]}\n```"
     },
     {
       "id": 4,
       "subject": "Task 4: Migrate 3 flows to createFlow; delete form.ts files",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [3],
       "description": "**Goal:** Replace each flow component's ~55 lines of wiring with one createFlow({...}) call, prefix templates with flow., delete the three form.ts. Behavior identical.\n\n**Verify:** pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host → pass; grep -rn \"runInInjectionContext\" libs/tommy/signal-forms/flow-compose/src → empty\n\n```json:metadata\n{\"files\":[\"libs/tommy/signal-forms/flow-compose/src/lib/flows/bank/bank-flow.ts\",\"libs/tommy/signal-forms/flow-compose/src/lib/flows/bank/bank-flow.html\",\"libs/tommy/signal-forms/flow-compose/src/lib/flows/insurance/insurance-flow.ts\",\"libs/tommy/signal-forms/flow-compose/src/lib/flows/insurance/insurance-flow.html\",\"libs/tommy/signal-forms/flow-compose/src/lib/flows/newsletter/newsletter-flow.ts\",\"libs/tommy/signal-forms/flow-compose/src/lib/flows/newsletter/newsletter-flow.html\"],\"verifyCommand\":\"pnpm nx test tommy-signal-forms-flow-compose && pnpm nx build tommy-host\",\"acceptanceCriteria\":[\"each flow component is createFlow + metadata only\",\"templates use flow. prefix\",\"three form.ts deleted, no runInInjectionContext\",\"suite incl round-trip + AOT green\"]}\n```"
     },
     {
       "id": 5,
       "subject": "Task 5: Update README for new layout + createFlow",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [4],
       "description": "**Goal:** Align README.md with the new structure: contract paths (runner/io/forms + root), form.ts-free How-to-add-a-flow using createFlow, and a ledger that no longer claims ~55–90 lines of per-flow repetition.\n\n**Verify:** Read README; grep -nE \"engine/|form\\.ts|runInInjectionContext\" libs/tommy/signal-forms/flow-compose/README.md → only historical/ledger mentions\n\n```json:metadata\n{\"files\":[\"libs/tommy/signal-forms/flow-compose/README.md\"],\"verifyCommand\":\"pnpm nx lint tommy-signal-forms-flow-compose\",\"acceptanceCriteria\":[\"no engine//form.ts/runInInjectionContext as live instructions\",\"How to add a flow uses createFlow + new folders\",\"ledger reflects hoisted wiring\",\"lint green\"]}\n```"
     }

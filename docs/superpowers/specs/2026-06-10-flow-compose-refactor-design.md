@@ -222,8 +222,8 @@ Template changes are a mechanical `flow.` prefix; typed step slices are untouche
 </tommy-flow-runner>
 ```
 
-Apply the identical transform to `insurance` and `newsletter` (newsletter has no
-`seedDefaults`).
+Apply the identical transform to `insurance` and `newsletter` (all three seed `tos` via
+`seedDefaults` — every model carries a `tos` field).
 
 ### 5. Public API (`index.ts`)
 
