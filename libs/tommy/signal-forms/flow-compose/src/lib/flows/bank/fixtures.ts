@@ -1,6 +1,6 @@
-import type { FlowFixture } from '../../engine/flow-backend';
-import type { FeatureDescriptor, SubmitOutcome } from '../../engine/flow-types';
-import { MOCK_IDP_ORIGIN } from '../../engine/mitid';
+import type { FlowFixture } from '../../io/flow-backend';
+import type { FeatureDescriptor, SubmitOutcome } from '../../flow-types';
+import { MOCK_IDP_ORIGIN } from '../../io/mitid';
 
 export type BankFeatures = {
   FULL_NAME: FeatureDescriptor;

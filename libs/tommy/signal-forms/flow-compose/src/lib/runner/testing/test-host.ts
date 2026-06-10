@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormField, form, required, schema, type FieldTree } from '@angular/forms/signals';
-import type { Signature } from '../flow-types';
+import type { Signature } from '../../flow-types';
 import type { FlowConfig } from '../flow-config';
 import { FlowRunner } from '../flow-runner';
 import { FlowStep } from '../flow-step';

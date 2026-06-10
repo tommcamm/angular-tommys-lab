@@ -1,8 +1,8 @@
 export { FlowCompose } from './lib/flow-compose';
-export { FlowRunner } from './lib/engine/flow-runner';
-export { FlowStep, type FlowStepContext } from './lib/engine/flow-step';
-export { FlowIntro, FlowReceipt, type FlowReceiptContext } from './lib/engine/flow-slots';
-export type { FlowConfig } from './lib/engine/flow-config';
+export { FlowRunner } from './lib/runner/flow-runner';
+export { FlowStep, type FlowStepContext } from './lib/runner/flow-step';
+export { FlowIntro, FlowReceipt, type FlowReceiptContext } from './lib/runner/flow-slots';
+export type { FlowConfig } from './lib/runner/flow-config';
 export type {
   FlowMeta,
   FlowEnvelope,
@@ -14,4 +14,4 @@ export type {
   Signature,
   SubmitOk,
   SubmitOutcome,
-} from './lib/engine/flow-types';
+} from './lib/flow-types';

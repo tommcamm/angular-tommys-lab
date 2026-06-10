@@ -1,4 +1,4 @@
-import type { FlowConfig } from '../../engine/flow-config';
+import type { FlowConfig } from '../../runner/flow-config';
 import type { NewsletterModel } from './model';
 
 export const NEWSLETTER_FLOW_CONFIG: FlowConfig<NewsletterModel> = {

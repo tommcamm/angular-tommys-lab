@@ -5,7 +5,7 @@ import type {
   Signature,
   SubmitOutcome,
   TermsMap,
-} from './flow-types';
+} from '../flow-types';
 
 const DELAY_MS = 500;
 function delay<T>(value: T, ms = DELAY_MS): Promise<T> {

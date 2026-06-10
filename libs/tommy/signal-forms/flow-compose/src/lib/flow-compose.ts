@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { FLOW_FIXTURES, FlowBackend } from './engine/flow-backend';
-import { FlowResume } from './engine/flow-resume';
+import { FLOW_FIXTURES, FlowBackend } from './io/flow-backend';
+import { FlowResume } from './io/flow-resume';
 import { NewsletterFlow } from './flows/newsletter/newsletter-flow';
 import { BankFlow } from './flows/bank/bank-flow';
 import { InsuranceFlow } from './flows/insurance/insurance-flow';

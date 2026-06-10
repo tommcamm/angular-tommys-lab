@@ -1,5 +1,5 @@
-import type { FlowFixture } from '../../engine/flow-backend';
-import type { FeatureDescriptor } from '../../engine/flow-types';
+import type { FlowFixture } from '../../io/flow-backend';
+import type { FeatureDescriptor } from '../../flow-types';
 
 export type InsuranceFeatures = {
   POLICY_NUMBER: FeatureDescriptor;

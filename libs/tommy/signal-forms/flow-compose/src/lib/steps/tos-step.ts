@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
-import type { TermsMap } from '../engine/flow-types';
+import type { TermsMap } from '../flow-types';
 import { FieldError } from '../ui/field-error';
 
 /** One acceptance row in the form model (bridged from the terms map). */

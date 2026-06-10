@@ -5,13 +5,13 @@ import {
 } from '@angular/core';
 import { submit, type FieldTree } from '@angular/forms/signals';
 import type { FlowConfig } from './flow-config';
-import type { ServerFieldError, Signature, SubmitOk, SubmitOutcome } from './flow-types';
+import type { ServerFieldError, Signature, SubmitOk, SubmitOutcome } from '../flow-types';
 import { FlowStep } from './flow-step';
 import { FlowIntro, FlowReceipt } from './flow-slots';
-import { FlowBackend } from './flow-backend';
-import { ExternalRedirect } from './external-redirect';
-import { FlowStateStore } from './flow-state-store';
-import { buildReturnUrl } from './mitid';
+import { FlowBackend } from '../io/flow-backend';
+import { ExternalRedirect } from '../io/external-redirect';
+import { FlowStateStore } from '../io/flow-state-store';
+import { buildReturnUrl } from '../io/mitid';
 import { createWizard, type StepState, type Wizard } from './wizard';
 import { FlowShell } from '../ui/flow-shell';
 import { StepIndicator } from '../ui/step-indicator';

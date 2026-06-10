@@ -1,4 +1,4 @@
-import type { FlowConfig } from '../../engine/flow-config';
+import type { FlowConfig } from '../../runner/flow-config';
 import type { BankModel } from './model';
 
 export const BANK_FLOW_CONFIG: FlowConfig<BankModel> = {

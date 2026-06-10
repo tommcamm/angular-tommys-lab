@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { FlowCompose } from './flow-compose';
-import { FlowResume } from './engine/flow-resume';
-import { FlowStateStore } from './engine/flow-state-store';
+import { FlowResume } from './io/flow-resume';
+import { FlowStateStore } from './io/flow-state-store';
 
 function routeWith(params: Record<string, string>) {
   return { snapshot: { queryParamMap: { get: (k: string) => params[k] ?? null } } } as unknown as ActivatedRoute;

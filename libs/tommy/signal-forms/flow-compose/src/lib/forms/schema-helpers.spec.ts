@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { form, schema } from '@angular/forms/signals';
 import { applyFeature, type LengthBounds } from './schema-helpers';
-import type { FeatureDescriptor } from './flow-types';
+import type { FeatureDescriptor } from '../flow-types';
 
 interface M {
   username: string;

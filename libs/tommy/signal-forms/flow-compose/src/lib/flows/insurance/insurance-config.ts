@@ -1,4 +1,4 @@
-import type { FlowConfig } from '../../engine/flow-config';
+import type { FlowConfig } from '../../runner/flow-config';
 import type { InsuranceModel } from './model';
 
 export const INSURANCE_FLOW_CONFIG: FlowConfig<InsuranceModel> = {

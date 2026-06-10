@@ -1,5 +1,5 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
-import type { SubmitOk } from './flow-types';
+import type { SubmitOk } from '../flow-types';
 
 /** Intro body. No context — it is defined in the flow's own template and closes over env(). */
 @Directive({ selector: 'ng-template[flowIntro]' })

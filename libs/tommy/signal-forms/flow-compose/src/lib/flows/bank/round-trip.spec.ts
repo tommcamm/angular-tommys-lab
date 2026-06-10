@@ -1,10 +1,10 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { BankFlow } from './bank-flow';
-import { FlowBackend, FLOW_FIXTURES } from '../../engine/flow-backend';
-import { ExternalRedirect } from '../../engine/external-redirect';
-import { FlowStateStore } from '../../engine/flow-state-store';
-import { FlowResume } from '../../engine/flow-resume';
+import { FlowBackend, FLOW_FIXTURES } from '../../io/flow-backend';
+import { ExternalRedirect } from '../../io/external-redirect';
+import { FlowStateStore } from '../../io/flow-state-store';
+import { FlowResume } from '../../io/flow-resume';
 import { bankFixture } from './fixtures';
 
 class FakeRedirect {

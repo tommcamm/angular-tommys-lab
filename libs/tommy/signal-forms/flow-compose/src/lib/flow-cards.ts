@@ -1,4 +1,4 @@
-import type { FlowMeta } from './engine/flow-types';
+import type { FlowMeta } from './flow-types';
 import { NEWSLETTER_FLOW_CONFIG } from './flows/newsletter/newsletter-config';
 import { BANK_FLOW_CONFIG } from './flows/bank/bank-config';
 import { INSURANCE_FLOW_CONFIG } from './flows/insurance/insurance-config';

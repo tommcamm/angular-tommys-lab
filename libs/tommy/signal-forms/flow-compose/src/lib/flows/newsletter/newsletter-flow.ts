@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, Injector, afterNextRender, computed, effect, inject, resource, signal } from '@angular/core';
-import type { Signature } from '../../engine/flow-types';
-import { FlowBackend } from '../../engine/flow-backend';
-import { FlowResume } from '../../engine/flow-resume';
-import { FlowRunner } from '../../engine/flow-runner';
-import { FlowStep } from '../../engine/flow-step';
-import { FlowIntro, FlowReceipt } from '../../engine/flow-slots';
+import type { Signature } from '../../flow-types';
+import { FlowBackend } from '../../io/flow-backend';
+import { FlowResume } from '../../io/flow-resume';
+import { FlowRunner } from '../../runner/flow-runner';
+import { FlowStep } from '../../runner/flow-step';
+import { FlowIntro, FlowReceipt } from '../../runner/flow-slots';
 import { tosAcksFrom, TosStep } from '../../steps/tos-step';
 import { ContactStep } from './steps/contact-step';
 import { PrefsStep } from './steps/prefs-step';

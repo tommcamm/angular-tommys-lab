@@ -1,6 +1,6 @@
 import { apply, applyEach, schema, validate } from '@angular/forms/signals';
-import { applyFeature } from '../../engine/schema-helpers';
-import type { FlowEnvelope } from '../../engine/flow-types';
+import { applyFeature } from '../../forms/schema-helpers';
+import type { FlowEnvelope } from '../../flow-types';
 import type { BankModel } from './model';
 
 export function bankSchema(env: FlowEnvelope) {

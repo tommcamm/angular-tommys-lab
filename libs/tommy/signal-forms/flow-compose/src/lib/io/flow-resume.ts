@@ -1,7 +1,15 @@
 import { Injectable, inject } from '@angular/core';
+import type { Signature } from '../flow-types';
 import { FlowStateStore } from './flow-state-store';
 import { parseCallback } from './mitid';
-import type { PendingResume } from './resume';
+
+/** What the flow component + runner consult after a MitID round-trip. */
+export interface PendingResume {
+  /** The serialized model from the single-use snapshot (already `config.snapshot`-shaped). */
+  readonly model: unknown;
+  /** The MitID proof: challenge id + the one-time code returned by the provider. */
+  readonly signature: Signature;
+}
 
 /**
  * Discriminated union so the type proves the invariant: an `approved` cache always

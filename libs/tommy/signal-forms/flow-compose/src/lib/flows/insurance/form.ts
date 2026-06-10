@@ -1,6 +1,6 @@
 import { Injector, runInInjectionContext, untracked, type WritableSignal } from '@angular/core';
 import { form } from '@angular/forms/signals';
-import type { FlowEnvelope } from '../../engine/flow-types';
+import type { FlowEnvelope } from '../../flow-types';
 import type { InsuranceModel } from './model';
 import { insuranceSchema } from './schema';
 

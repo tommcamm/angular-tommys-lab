@@ -30,7 +30,7 @@ export default [
     // Structural directives (FlowStep, FlowIntro, FlowReceipt) use bare camelCase
     // attribute selectors (no prefix) following Angular's own ngIf/ngFor convention,
     // and must alias inputs so the attribute name matches the input name.
-    files: ['**/engine/flow-step.ts', '**/engine/flow-slots.ts'],
+    files: ['**/runner/flow-step.ts', '**/runner/flow-slots.ts'],
     rules: {
       '@angular-eslint/directive-selector': 'off',
       '@angular-eslint/no-input-rename': 'off',

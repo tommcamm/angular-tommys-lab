@@ -1,4 +1,4 @@
-import type { FlowFixture } from './engine/flow-backend';
+import type { FlowFixture } from './io/flow-backend';
 import { newsletterFixture } from './flows/newsletter/fixtures';
 import { bankFixture } from './flows/bank/fixtures';
 import { insuranceFixture } from './flows/insurance/fixtures';

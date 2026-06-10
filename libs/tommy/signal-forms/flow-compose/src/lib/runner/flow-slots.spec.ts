@@ -2,7 +2,7 @@ import { Component, contentChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NgTemplateOutlet } from '@angular/common';
 import { FlowIntro, FlowReceipt } from './flow-slots';
-import type { SubmitOk } from './flow-types';
+import type { SubmitOk } from '../flow-types';
 
 /**
  * Wrapper child that queries its projected content for FlowIntro and FlowReceipt.

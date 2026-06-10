@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Injector, signal } from '@angular/core';
-import type { FlowEnvelope } from '../../engine/flow-types';
+import type { FlowEnvelope } from '../../flow-types';
 import type { InsuranceFeatures } from './fixtures';
 import { insuranceForm } from './form';
 import { emptyInsuranceModel } from './model';

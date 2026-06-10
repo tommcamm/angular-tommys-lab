@@ -6,7 +6,7 @@ import {
   type SchemaPathRules,
   type SchemaPath,
 } from '@angular/forms/signals';
-import type { FeatureDescriptor } from './flow-types';
+import type { FeatureDescriptor } from '../flow-types';
 
 export interface LengthBounds {
   readonly minLength?: number;

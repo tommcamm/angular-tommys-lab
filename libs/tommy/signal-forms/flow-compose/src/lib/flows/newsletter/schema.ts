@@ -1,5 +1,5 @@
 import { apply, applyEach, email, required, schema, validate } from '@angular/forms/signals';
-import type { FlowEnvelope } from '../../engine/flow-types';
+import type { FlowEnvelope } from '../../flow-types';
 import type { NewsletterModel } from './model';
 
 export function newsletterSchema(env: FlowEnvelope) {

@@ -1,9 +1,9 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { TestHost } from './testing/test-host';
-import { FlowBackend, FLOW_FIXTURES, type FlowFixture } from './flow-backend';
-import { ExternalRedirect } from './external-redirect';
-import { FlowStateStore } from './flow-state-store';
+import { FlowBackend, FLOW_FIXTURES, type FlowFixture } from '../io/flow-backend';
+import { ExternalRedirect } from '../io/external-redirect';
+import { FlowStateStore } from '../io/flow-state-store';
 
 class FakeRedirect {
   lastUrl: string | null = null;

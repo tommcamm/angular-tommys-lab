@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FlowBackend, FLOW_FIXTURES, type FlowFixture } from './flow-backend';
-import type { SubmitOutcome } from './flow-types';
+import type { SubmitOutcome } from '../flow-types';
 
 // `AMOUNT` carries an extra `minAmount`: structurally assignable to
 // `FeatureDescriptor` ({ mandatory: boolean }). Built via a local so strict
